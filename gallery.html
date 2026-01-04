@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>作品集浏览</title>
+    <link rel="stylesheet" href="gallery.css">
+</head>
+<body>
+    <!-- 侧边栏 -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>画师列表</h3>
+        </div>
+        <nav class="sidebar-nav" id="sidebarNav">
+            <div class="loading">加载中...</div>
+        </nav>
+    </aside>
+
+    <!-- 浮动按钮 -->
+    <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+        <span class="toggle-icon">☰</span>
+    </button>
+
+    <!-- 主内容 -->
+    <main class="main-wrapper">
+        <div class="container">
+            <!-- 顶部导航 -->
+            <div class="top-nav">
+                <a href="index.html" class="back-btn">← 返回主页</a>
+            </div>
+
+            <!-- 主内容区 -->
+            <div id="content" class="main-content">
+                <div class="loading">加载中...</div>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination" id="pagination" style="display: none;">
+                <button onclick="goToPage(currentPage - 1)">上一页</button>
+                <span class="page-info">第 <span id="currentPageNum">1</span> 页 / 共 <span id="totalPages">1</span> 页</span>
+                <button onclick="goToPage(currentPage + 1)">下一页</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- 图片/视频放大模态框 -->
+    <div class="modal" id="imageModal" onclick="closeModal(event)">
+        <div class="modal-content-wrapper" onclick="event.stopPropagation()">
+            <button class="modal-nav prev" onclick="changeImage(-1)">&#10094;</button>
+            <div id="modalContentContainer" style="position: relative;"></div>
+            <button class="modal-nav next" onclick="changeImage(1)">&#10095;</button>
+            <span class="modal-close" onclick="closeModalDirect()">&times;</span>
+            <div class="modal-title" id="modalTitle"></div>
+        </div>
+    </div>
+
+    <script src="utils.js"></script>
+    <script src="gallery.js"></script>
+</body>
+</html>
