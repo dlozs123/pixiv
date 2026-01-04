@@ -1,0 +1,326 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: "Microsoft YaHei", Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1920px;
+    margin: 0 auto;
+}
+
+/* 主内容区 */
+.main-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(900px, 1fr));
+    gap: 30px;
+}
+
+/* 画师卡片 */
+.artist-card {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.artist-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.artist-header {
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
+    border-bottom: 1px solid #eee;
+}
+
+.artist-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+}
+
+.artist-id {
+    font-size: 12px;
+    color: #999;
+    margin-left: 10px;
+}
+
+.artist-count {
+    margin-left: 10px;
+    color: #999;
+    font-size: 12px;
+}
+
+/* 预览网格 */
+.preview-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    padding: 8px;
+}
+
+.preview-item {
+    position: relative;
+    overflow: hidden;
+    background: #f0f0f0;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.preview-item:hover .preview-media {
+    transform: scale(1.05);
+}
+
+.preview-media-wrapper {
+    position: relative;
+    padding-top: 100%; /* 1:1 宽高比 */
+    overflow: hidden;
+}
+
+.preview-media {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+    background: #e0e0e0;
+}
+
+.preview-media.loading {
+    background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* 视频标识 */
+.video-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: bold;
+    z-index: 10;
+    pointer-events: none;
+}
+
+.video-play-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.video-play-icon::after {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 15px solid white;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    margin-left: 3px;
+}
+
+/* 图片标题 */
+.image-title {
+    padding: 8px;
+    font-size: 12px;
+    color: #666;
+    word-break: break-word;
+    line-height: 1.4;
+    min-height: 40px;
+    background: #fafafa;
+}
+
+/* 展开按钮 */
+.expand-btn {
+    grid-column: 1 / -1;
+    padding: 15px;
+    background: #f5f5f5;
+    border: 2px dashed #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    color: #666;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.expand-btn:hover {
+    background: #e8f4fd;
+    border-color: #2196F3;
+    color: #2196F3;
+}
+
+/* 模态框 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.95);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show { 
+    display: flex; 
+}
+
+.modal-content-wrapper {
+    position: relative;
+    max-width: 90%;
+    max-height: 90vh;
+    display: flex;
+    align-items: center;
+}
+
+.modal-content {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    display: block;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.modal-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: none;
+    font-size: 40px;
+    padding: 20px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background 0.3s;
+    z-index: 1002;
+}
+
+.modal-nav:hover { 
+    background: rgba(255,255,255,0.4); 
+}
+
+.modal-nav.prev { 
+    left: -60px; 
+}
+
+.modal-nav.next { 
+    right: -60px; 
+}
+
+.modal-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    color: #ccc;
+    font-size: 30px;
+    cursor: pointer;
+    z-index: 1001;
+}
+
+.modal-close:hover { 
+    color: white; 
+}
+
+.modal-title {
+    position: absolute;
+    bottom: -40px;
+    left: 0;
+    right: 0;
+    color: white;
+    text-align: center;
+    font-size: 14px;
+    z-index: 1001;
+}
+
+/* 分页 */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 40px;
+    padding: 20px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.pagination button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: #2196F3;
+    color: white;
+}
+
+.pagination button:hover {
+    background: #1976D2;
+}
+
+.pagination button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.loading { 
+    text-align: center; 
+    padding: 40px; 
+    color: #666; 
+    width: 100%; 
+}
+
+/* 响应式 */
+@media (max-width: 1200px) {
+    .preview-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .preview-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+}

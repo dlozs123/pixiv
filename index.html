@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixiv画师作品集</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 主内容区 -->
+        <div id="content" class="main-content">
+            <div class="loading">加载中...</div>
+        </div>
+
+        <!-- 分页 -->
+        <div class="pagination" id="pagination" style="display: none;">
+            <button onclick="goToPage(currentPage - 1)">上一页</button>
+            <span class="page-info">第 <span id="currentPageNum">1</span> 页 / 共 <span id="totalPages">1</span> 页</span>
+            <button onclick="goToPage(currentPage + 1)">下一页</button>
+        </div>
+    </div>
+
+    <!-- 图片/视频放大模态框 -->
+    <div class="modal" id="imageModal" onclick="closeModal(event)">
+        <div class="modal-content-wrapper" onclick="event.stopPropagation()">
+            <button class="modal-nav prev" onclick="changeImage(-1)">&#10094;</button>
+            <div id="modalContentContainer" style="position: relative;"></div>
+            <button class="modal-nav next" onclick="changeImage(1)">&#10095;</button>
+            <span class="modal-close" onclick="closeModalDirect()">&times;</span>
+            <div class="modal-title" id="modalTitle"></div>
+        </div>
+    </div>
+
+    <script src="utils.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
