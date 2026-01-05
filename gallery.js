@@ -1,7 +1,7 @@
 // 全局配置
 window.CDN_BASE = 'https://p1.dlozs.top/';
 const MAX_ITEMS_BEFORE_EXPAND = 50;
-const ARTISTS_PER_PAGE = 999; // 不分页，显示全部
+const ARTISTS_PER_PAGE = 1; // 每页显示1个画师
 
 // 全局变量
 let jsonData = [];
@@ -43,12 +43,16 @@ function loadJSON() {
             groupByUser();
             initLazyLoad();
             renderSidebar();
-            renderPage();
             
-            // 如果有指定画师，滚动到该画师
+            // 如果有指定画师，跳转到该画师所在页
             if (targetArtistId) {
-                setTimeout(() => scrollToArtist(targetArtistId), 500);
+                const artistIndex = groupedData.findIndex(g => g.userId == targetArtistId);
+                if (artistIndex !== -1) {
+                    currentPage = artistIndex + 1;
+                }
             }
+            
+            renderPage();
         })
         .catch(error => {
             document.getElementById('content').innerHTML = 
@@ -78,10 +82,11 @@ function renderSidebar() {
     const nav = document.getElementById('sidebarNav');
     nav.innerHTML = '';
     
-    groupedData.forEach(group => {
+    groupedData.forEach((group, index) => {
         const item = document.createElement('div');
         item.className = 'nav-item';
         item.dataset.userId = group.userId;
+        item.dataset.page = index + 1;
         
         const nameDiv = document.createElement('div');
         nameDiv.className = 'nav-item-name';
@@ -95,7 +100,7 @@ function renderSidebar() {
         item.appendChild(countDiv);
         
         item.onclick = () => {
-            scrollToArtist(group.userId);
+            goToPage(index + 1);
             // 移动端点击后自动收起侧边栏
             if (window.innerWidth <= 768) {
                 toggleSidebar();
@@ -104,23 +109,20 @@ function renderSidebar() {
         
         nav.appendChild(item);
     });
+    
+    updateSidebarActive();
 }
 
-// 滚动到指定画师
-function scrollToArtist(userId) {
-    const card = document.querySelector(`.artist-card[data-user-id="${userId}"]`);
-    if (card) {
-        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        
-        // 更新侧边栏激活状态
-        document.querySelectorAll('.nav-item').forEach(item => {
+// 更新侧边栏激活状态
+function updateSidebarActive() {
+    document.querySelectorAll('.nav-item').forEach(item => {
+        const page = parseInt(item.dataset.page);
+        if (page === currentPage) {
+            item.classList.add('active');
+        } else {
             item.classList.remove('active');
-        });
-        const navItem = document.querySelector(`.nav-item[data-user-id="${userId}"]`);
-        if (navItem) {
-            navItem.classList.add('active');
         }
-    }
+    });
 }
 
 // 切换侧边栏
@@ -157,12 +159,17 @@ function initLazyLoad() {
             }
         });
     }, {
-        rootMargin: '200px'
+        rootMargin: '400px' // 提前更多距离加载
     });
 }
 
 // 渲染页面
 function renderPage() {
+    const totalPages = groupedData.length;
+    document.getElementById('currentPageNum').textContent = currentPage;
+    document.getElementById('totalPages').textContent = totalPages;
+    document.getElementById('pagination').style.display = totalPages > 1 ? 'flex' : 'none';
+
     const contentDiv = document.getElementById('content');
     contentDiv.innerHTML = '';
 
@@ -171,93 +178,102 @@ function renderPage() {
         return;
     }
 
-    groupedData.forEach((group) => {
-        const isExpanded = expandedArtists.has(group.userId);
-        const hasMore = group.items.length > MAX_ITEMS_BEFORE_EXPAND;
-        const displayItems = (isExpanded || !hasMore) ? group.items : group.items.slice(0, MAX_ITEMS_BEFORE_EXPAND);
+    // 只渲染当前页的画师
+    const group = groupedData[currentPage - 1];
+    if (!group) {
+        contentDiv.innerHTML = '<div class="loading">页面不存在</div>';
+        return;
+    }
+
+    const isExpanded = expandedArtists.has(group.userId);
+    const hasMore = group.items.length > MAX_ITEMS_BEFORE_EXPAND;
+    const displayItems = (isExpanded || !hasMore) ? group.items : group.items.slice(0, MAX_ITEMS_BEFORE_EXPAND);
+    
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'artist-card';
+    cardDiv.dataset.userId = group.userId;
+
+    // 构建头部
+    const headerDiv = document.createElement('div');
+    headerDiv.className = 'artist-header';
+    headerDiv.innerHTML = `
+        <div>
+            <span class="artist-name">${group.user}</span>
+            <span class="artist-id">(ID: ${group.userId})</span>
+            <span class="artist-count">共 ${group.items.length} 张</span>
+        </div>
+    `;
+    cardDiv.appendChild(headerDiv);
+
+    // 构建预览网格
+    const gridDiv = document.createElement('div');
+    gridDiv.className = 'preview-grid';
+    
+    displayItems.forEach((item) => {
+        const previewDiv = document.createElement('div');
+        previewDiv.className = 'preview-item';
         
-        const cardDiv = document.createElement('div');
-        cardDiv.className = 'artist-card';
-        cardDiv.dataset.userId = group.userId;
-
-        // 构建头部
-        const headerDiv = document.createElement('div');
-        headerDiv.className = 'artist-header';
-        headerDiv.innerHTML = `
-            <div>
-                <span class="artist-name">${group.user}</span>
-                <span class="artist-id">(ID: ${group.userId})</span>
-                <span class="artist-count">共 ${group.items.length} 张</span>
-            </div>
-        `;
-        cardDiv.appendChild(headerDiv);
-
-        // 构建预览网格
-        const gridDiv = document.createElement('div');
-        gridDiv.className = 'preview-grid';
+        const mediaWrapper = document.createElement('div');
+        mediaWrapper.className = 'preview-media-wrapper';
         
-        displayItems.forEach((item) => {
-            const previewDiv = document.createElement('div');
-            previewDiv.className = 'preview-item';
+        const ext = item.ext.toLowerCase();
+        const isVideo = ext === 'webm';
+        
+        // 创建图片元素
+        const img = document.createElement('img');
+        img.className = 'preview-media loading';
+        img.dataset.src = generateFileName(item);
+        
+        imageObserver.observe(img);
+        
+        mediaWrapper.appendChild(img);
+        
+        // 视频标识
+        if (isVideo) {
+            const badge = document.createElement('div');
+            badge.className = 'video-badge';
+            badge.textContent = 'VIDEO';
+            mediaWrapper.appendChild(badge);
             
-            const mediaWrapper = document.createElement('div');
-            mediaWrapper.className = 'preview-media-wrapper';
-            
-            const ext = item.ext.toLowerCase();
-            const isVideo = ext === 'webm';
-            
-            // 创建图片元素
-            const img = document.createElement('img');
-            img.className = 'preview-media loading';
-            img.dataset.src = generateFileName(item);
-            
-            imageObserver.observe(img);
-            
-            mediaWrapper.appendChild(img);
-            
-            // 视频标识
-            if (isVideo) {
-                const badge = document.createElement('div');
-                badge.className = 'video-badge';
-                badge.textContent = 'VIDEO';
-                mediaWrapper.appendChild(badge);
-                
-                const playIcon = document.createElement('div');
-                playIcon.className = 'video-play-icon';
-                mediaWrapper.appendChild(playIcon);
-            }
-            
-            previewDiv.appendChild(mediaWrapper);
-            
-            // 图片标题
-            const titleDiv = document.createElement('div');
-            titleDiv.className = 'image-title';
-            titleDiv.textContent = getImageTitle(item);
-            previewDiv.appendChild(titleDiv);
-            
-            // 点击预览
-            previewDiv.onclick = () => openPreview(group.items, item._originalIndex);
-            
-            gridDiv.appendChild(previewDiv);
-        });
-
-        // 展开按钮
-        if (hasMore && !isExpanded) {
-            const expandBtn = document.createElement('div');
-            expandBtn.className = 'expand-btn';
-            expandBtn.textContent = `展开剩余 ${group.items.length - MAX_ITEMS_BEFORE_EXPAND} 张图片`;
-            expandBtn.onclick = () => {
-                expandedArtists.add(group.userId);
-                renderPage();
-                // 展开后滚动到该画师
-                setTimeout(() => scrollToArtist(group.userId), 100);
-            };
-            gridDiv.appendChild(expandBtn);
+            const playIcon = document.createElement('div');
+            playIcon.className = 'video-play-icon';
+            mediaWrapper.appendChild(playIcon);
         }
-
-        cardDiv.appendChild(gridDiv);
-        contentDiv.appendChild(cardDiv);
+        
+        previewDiv.appendChild(mediaWrapper);
+        
+        // 图片标题
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'image-title';
+        titleDiv.textContent = getImageTitle(item);
+        previewDiv.appendChild(titleDiv);
+        
+        // 点击预览
+        previewDiv.onclick = () => openPreview(group.items, item._originalIndex);
+        
+        gridDiv.appendChild(previewDiv);
     });
+
+    // 展开按钮
+    if (hasMore && !isExpanded) {
+        const expandBtn = document.createElement('div');
+        expandBtn.className = 'expand-btn';
+        expandBtn.textContent = `展开剩余 ${group.items.length - MAX_ITEMS_BEFORE_EXPAND} 张图片`;
+        expandBtn.onclick = () => {
+            expandedArtists.add(group.userId);
+            renderPage();
+        };
+        gridDiv.appendChild(expandBtn);
+    }
+
+    cardDiv.appendChild(gridDiv);
+    contentDiv.appendChild(cardDiv);
+    
+    // 更新侧边栏激活状态
+    updateSidebarActive();
+    
+    // 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // 打开预览
@@ -330,9 +346,12 @@ function performClose() {
     document.getElementById('imageModal').classList.remove('show');
 }
 
-// 翻页（已禁用，显示全部）
+// 翻页
 function goToPage(page) {
-    // 不再使用
+    const totalPages = groupedData.length;
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    renderPage();
 }
 
 // 键盘监听
@@ -346,33 +365,3 @@ window.addEventListener('keydown', function(e) {
         else if (e.key === 'Escape') performClose();
     }
 });
-
-// 监听滚动，更新侧边栏激活状态
-let scrollTimeout;
-window.addEventListener('scroll', function() {
-    clearTimeout(scrollTimeout);
-    scrollTimeout = setTimeout(updateActiveNav, 100);
-});
-
-function updateActiveNav() {
-    const cards = document.querySelectorAll('.artist-card');
-    let activeCard = null;
-    
-    cards.forEach(card => {
-        const rect = card.getBoundingClientRect();
-        if (rect.top <= 100 && rect.bottom > 100) {
-            activeCard = card;
-        }
-    });
-    
-    if (activeCard) {
-        const userId = activeCard.dataset.userId;
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        const navItem = document.querySelector(`.nav-item[data-user-id="${userId}"]`);
-        if (navItem) {
-            navItem.classList.add('active');
-        }
-    }
-}

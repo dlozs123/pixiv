@@ -67,6 +67,10 @@ body {
     margin-bottom: 3px;
 }
 
+.nav-item.active .nav-item-name {
+    color: #2196F3;
+}
+
 .nav-item-count {
     font-size: 12px;
     color: #999;
@@ -114,7 +118,7 @@ body {
 }
 
 .container {
-    max-width: 1920px;
+    max-width: 1600px;
     margin: 0 auto;
 }
 
@@ -141,11 +145,9 @@ body {
     color: #1976D2;
 }
 
-/* 主内容区 */
+/* 主内容区 - 单个画师占满 */
 .main-content {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(900px, 1fr));
-    gap: 30px;
+    min-height: 500px;
 }
 
 /* 画师卡片 */
@@ -154,48 +156,41 @@ body {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-    scroll-margin-top: 80px;
-}
-
-.artist-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
 }
 
 .artist-header {
-    padding: 12px 15px;
+    padding: 15px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     background: #fafafa;
-    border-bottom: 1px solid #eee;
+    border-bottom: 2px solid #eee;
 }
 
 .artist-name {
     font-weight: bold;
-    font-size: 16px;
+    font-size: 18px;
     color: #333;
 }
 
 .artist-id {
-    font-size: 12px;
+    font-size: 13px;
     color: #999;
     margin-left: 10px;
 }
 
 .artist-count {
     margin-left: 10px;
-    color: #999;
-    font-size: 12px;
+    color: #666;
+    font-size: 13px;
 }
 
 /* 预览网格 */
 .preview-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 8px;
-    padding: 8px;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 15px;
 }
 
 .preview-item {
@@ -203,11 +198,17 @@ body {
     overflow: hidden;
     background: #f0f0f0;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
+    transition: transform 0.2s;
+}
+
+.preview-item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .preview-item:hover .preview-media {
-    transform: scale(1.05);
+    transform: scale(1.08);
 }
 
 .preview-media-wrapper {
@@ -243,9 +244,9 @@ body {
     position: absolute;
     top: 8px;
     right: 8px;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.75);
     color: white;
-    padding: 4px 8px;
+    padding: 5px 10px;
     border-radius: 4px;
     font-size: 11px;
     font-weight: bold;
@@ -258,8 +259,8 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50px;
-    height: 50px;
+    width: 60px;
+    height: 60px;
     background: rgba(0, 0, 0, 0.6);
     border-radius: 50%;
     display: flex;
@@ -273,35 +274,37 @@ body {
     content: '';
     width: 0;
     height: 0;
-    border-left: 15px solid white;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    margin-left: 3px;
+    border-left: 18px solid white;
+    border-top: 12px solid transparent;
+    border-bottom: 12px solid transparent;
+    margin-left: 4px;
 }
 
 /* 图片标题 */
 .image-title {
-    padding: 8px;
-    font-size: 12px;
+    padding: 10px;
+    font-size: 13px;
     color: #666;
     word-break: break-word;
-    line-height: 1.4;
-    min-height: 40px;
+    line-height: 1.5;
+    min-height: 45px;
     background: #fafafa;
+    border-top: 1px solid #eee;
 }
 
 /* 展开按钮 */
 .expand-btn {
     grid-column: 1 / -1;
-    padding: 15px;
+    padding: 20px;
     background: #f5f5f5;
     border: 2px dashed #ddd;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: pointer;
     text-align: center;
     color: #666;
-    font-size: 14px;
+    font-size: 15px;
     transition: all 0.2s;
+    font-weight: 500;
 }
 
 .expand-btn:hover {
@@ -401,8 +404,8 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 10px;
-    margin-top: 40px;
+    gap: 15px;
+    margin-top: 30px;
     padding: 20px;
     background: white;
     border-radius: 8px;
@@ -410,7 +413,7 @@ body {
 }
 
 .pagination button {
-    padding: 10px 20px;
+    padding: 10px 24px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
@@ -418,28 +421,39 @@ body {
     transition: all 0.2s;
     background: #2196F3;
     color: white;
+    font-weight: 500;
 }
 
-.pagination button:hover {
+.pagination button:hover:not(:disabled) {
     background: #1976D2;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
 }
 
 .pagination button:disabled {
     background: #ccc;
     cursor: not-allowed;
+    transform: none;
+}
+
+.page-info {
+    font-size: 14px;
+    color: #666;
+    font-weight: 500;
 }
 
 .loading { 
     text-align: center; 
-    padding: 40px; 
+    padding: 60px 20px; 
     color: #666; 
+    font-size: 16px;
     width: 100%; 
 }
 
 /* 响应式 */
 @media (max-width: 1200px) {
     .preview-grid {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     }
 }
 
@@ -457,11 +471,8 @@ body {
     }
     
     .preview-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    .main-content {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
     }
     
     .sidebar-toggle {
@@ -469,5 +480,11 @@ body {
         top: 10px;
         width: 45px;
         height: 45px;
+    }
+    
+    .artist-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
     }
 }

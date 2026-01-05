@@ -48,7 +48,15 @@ function normalizeName(name) {
 
 function generateFileName(item) {
     const fileName = `${item.id}-${item.title}.${item.ext}`;
-    return window.CDN_BASE + encodeURIComponent(normalizeName(fileName)).replace(/%2F/g, '/');
+    const normalized = normalizeName(fileName);
+    const encoded = encodeURIComponent(normalized).replace(/%2F/g, '/');
+    
+    // 处理#号问题：URL中#后面的内容会被浏览器当作锚点截断
+    // 需要在生成URL时就截断#及之后的部分
+    const hashIndex = encoded.indexOf('#');
+    const finalEncoded = hashIndex !== -1 ? encoded.substring(0, hashIndex) : encoded;
+    
+    return window.CDN_BASE + finalEncoded;
 }
 
 function getImageTitle(item) {
