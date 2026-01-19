@@ -18,7 +18,7 @@ let currentViewingIndex = -1;
 let imageObserver;
 
 // 侧边栏状态
-let sidebarCollapsed = false;
+let sidebarCollapsed = true; // 默认收起
 
 // 页面加载时自动读取 data.json
 window.addEventListener('DOMContentLoaded', function() {
