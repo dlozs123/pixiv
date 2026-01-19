@@ -22,6 +22,7 @@ body {
     transition: transform 0.3s ease;
     z-index: 900;
     overflow-y: auto;
+    transform: translateX(-260px); /* 默认收起 */
 }
 
 .sidebar.collapsed {
@@ -107,7 +108,7 @@ body {
 
 /* 主内容区域 */
 .main-wrapper {
-    margin-left: 260px;
+    margin-left: 0; /* 默认侧边栏收起，不留边距 */
     transition: margin-left 0.3s ease;
     padding: 20px;
     min-height: 100vh;
