@@ -5,505 +5,265 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>作品集浏览</title>
     <style>
-        /* gallery.css 内容 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Microsoft YaHei", Arial, sans-serif;
-            background: #f5f5f5;
-            overflow-x: hidden;
-        }
+        /* 基础样式 */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", Arial, sans-serif; background: #f5f5f5; overflow-x: hidden; }
 
         /* 侧边栏 */
         .sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 260px;
-            height: 100vh;
-            background: white;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-            z-index: 900;
-            overflow-y: auto;
+            position: fixed; left: 0; top: 0; width: 260px; height: 100vh;
+            background: white; box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease; z-index: 900; overflow-y: auto;
+            display: flex; flex-direction: column;
         }
+        .sidebar.collapsed { transform: translateX(-260px); }
 
-        .sidebar.collapsed {
-            transform: translateX(-260px);
+        /* 侧边栏搜索区 */
+        .search-area {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background: #fff;
+            position: sticky; top: 0; z-index: 10;
         }
+        .search-input {
+            width: 100%; padding: 8px 12px;
+            border: 1px solid #ddd; border-radius: 4px;
+            font-size: 14px; outline: none;
+            transition: border-color 0.2s;
+        }
+        .search-input:focus { border-color: #2196F3; }
+        
+        .search-nav {
+            margin-top: 10px; display: none; /* 默认隐藏 */
+            align-items: center; justify-content: space-between;
+            background: #e3f2fd; padding: 8px; border-radius: 4px; font-size: 12px;
+        }
+        .search-nav.active { display: flex; }
+        .search-nav button {
+            background: #2196F3; color: white; border: none;
+            padding: 4px 10px; border-radius: 3px; cursor: pointer; font-size: 12px;
+        }
+        .search-nav button:disabled { background: #ccc; cursor: not-allowed; }
 
+        /* 侧边栏头部 */
         .sidebar-header {
-            padding: 20px;
-            background: #2196F3;
-            color: white;
+            padding: 15px; background: #2196F3; color: white;
+            display: flex; justify-content: space-between; align-items: center;
         }
+        .sidebar-header h3 { font-size: 16px; font-weight: 600; }
 
-        .sidebar-header h3 {
-            font-size: 18px;
-            font-weight: 600;
-        }
-
-        .sidebar-nav {
-            padding: 10px 0;
-        }
-
-        .nav-item {
-            padding: 12px 20px;
-            cursor: pointer;
-            transition: background 0.2s;
+        /* 分类折叠样式 */
+        .category-group { margin-bottom: 5px; }
+        .category-header {
+            padding: 12px 15px; cursor: pointer; background: #fafafa;
+            font-weight: bold; font-size: 14px; color: #444;
+            display: flex; justify-content: space-between; align-items: center;
             border-left: 3px solid transparent;
         }
+        .category-header:hover { background: #f0f0f0; }
+        .category-header .arrow { transition: transform 0.3s; font-size: 12px; }
+        .category-group.collapsed .category-header .arrow { transform: rotate(-90deg); }
+        .category-group.collapsed .category-content { display: none; }
 
-        .nav-item:hover {
-            background: #f5f5f5;
+        /* 画师列表项 */
+        .category-content { background: white; }
+        .nav-item {
+            padding: 10px 15px 10px 30px; cursor: pointer;
+            transition: background 0.2s; border-left: 3px solid transparent;
+            font-size: 13px; color: #555;
         }
-
+        .nav-item:hover { background: #f5f5f5; }
         .nav-item.active {
-            background: #e3f2fd;
-            border-left-color: #2196F3;
-            color: #2196F3;
-            font-weight: 600;
+            background: #e3f2fd; border-left-color: #2196F3; color: #2196F3; font-weight: 600;
         }
-
-        .nav-item-name {
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 3px;
-        }
-
-        .nav-item.active .nav-item-name {
-            color: #2196F3;
-        }
-
-        .nav-item-count {
-            font-size: 12px;
-            color: #999;
-        }
+        .nav-item-count { float: right; color: #999; font-size: 11px; margin-top: 2px; }
 
         /* 浮动按钮 */
         .sidebar-toggle {
-            position: fixed;
-            left: 20px;
-            top: 20px;
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #2196F3;
-            color: white;
-            border: none;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-            z-index: 901;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
+            position: fixed; left: 20px; top: 20px; width: 50px; height: 50px;
+            border-radius: 50%; background: #2196F3; color: white; border: none;
+            cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 901;
+            display: flex; align-items: center; justify-content: center; transition: all 0.3s;
         }
-
-        .sidebar-toggle:hover {
-            background: #1976D2;
-            transform: scale(1.1);
-        }
-
-        .toggle-icon {
-            font-size: 24px;
-        }
+        .sidebar-toggle:hover { background: #1976D2; transform: scale(1.1); }
+        .toggle-icon { font-size: 24px; }
 
         /* 主内容区域 */
         .main-wrapper {
-            margin-left: 260px;
-            transition: margin-left 0.3s ease;
-            padding: 20px;
-            min-height: 100vh;
+            margin-left: 260px; transition: margin-left 0.3s ease;
+            padding: 20px; min-height: 100vh;
         }
-
-        .main-wrapper.expanded {
-            margin-left: 0;
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-        }
+        .main-wrapper.expanded { margin-left: 0; }
+        .container { max-width: 1600px; margin: 0 auto; }
 
         /* 顶部导航 */
         .top-nav {
-            background: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white; padding: 15px 20px; border-radius: 8px;
+            margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
-        .back-btn {
-            color: #2196F3;
-            text-decoration: none;
-            font-size: 14px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.2s;
-        }
-
-        .back-btn:hover {
-            color: #1976D2;
-        }
-
-        /* 主内容区 - 单个画师占满 */
-        .main-content {
-            min-height: 500px;
-        }
+        .back-btn { color: #2196F3; text-decoration: none; font-size: 14px; display: inline-flex; align-items: center; gap: 5px; }
+        .back-btn:hover { color: #1976D2; }
 
         /* 画师卡片 */
-        .artist-card {
-            background: white;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-
+        .artist-card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .artist-header {
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fafafa;
-            border-bottom: 2px solid #eee;
+            padding: 15px 20px; display: flex; justify-content: space-between;
+            align-items: center; background: #fafafa; border-bottom: 2px solid #eee;
         }
-
-        .artist-name {
-            font-weight: bold;
-            font-size: 18px;
-            color: #333;
-        }
-
-        .artist-id {
-            font-size: 13px;
-            color: #999;
-            margin-left: 10px;
-        }
-
-        .artist-count {
-            margin-left: 10px;
-            color: #666;
-            font-size: 13px;
-        }
+        .artist-name { font-weight: bold; font-size: 18px; color: #333; }
+        .artist-id { font-size: 13px; color: #999; margin-left: 10px; }
+        .artist-count { margin-left: 10px; color: #666; font-size: 13px; }
 
         /* 预览网格 */
         .preview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 12px;
-            padding: 15px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px; padding: 15px;
         }
-
         .preview-item {
-            position: relative;
-            overflow: hidden;
-            background: #f0f0f0;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: transform 0.2s;
+            position: relative; overflow: hidden; background: #f0f0f0;
+            cursor: pointer; border-radius: 6px; transition: transform 0.2s;
+            border: 2px solid transparent;
         }
-
-        .preview-item:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        /* 搜索高亮样式 */
+        .preview-item.highlight-result {
+            border-color: #ff9800;
+            box-shadow: 0 0 15px rgba(255, 152, 0, 0.5);
+            transform: scale(1.02);
+            z-index: 2;
         }
+        .preview-item:hover { transform: translateY(-4px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .preview-item:hover .preview-media { transform: scale(1.08); }
 
-        .preview-item:hover .preview-media {
-            transform: scale(1.08);
-        }
-
-        /* 预览媒体样式 */
-        .preview-media-wrapper {
-            position: relative;
-            padding-top: 100%;
-            overflow: hidden;
-        }
-
+        .preview-media-wrapper { position: relative; padding-top: 100%; overflow: hidden; }
         .preview-media {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s;
-            background: #e0e0e0;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover; transition: transform 0.3s; background: #e0e0e0;
         }
-
-        /* 图片的loading动画 */
         .preview-media.img-loading {
             background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
-            background-size: 200% 100%;
-            animation: loading 1.5s infinite;
+            background-size: 200% 100%; animation: loading 1.5s infinite;
         }
-
-        @keyframes loading {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
-        }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
         /* 视频标识 */
         .video-badge {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: rgba(0, 0, 0, 0.75);
-            color: white;
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            z-index: 10;
-            pointer-events: none;
+            position: absolute; top: 8px; right: 8px;
+            background: rgba(0, 0, 0, 0.75); color: white;
+            padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;
+            z-index: 10; pointer-events: none;
         }
-
         .video-play-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 60px;
-            height: 60px;
-            background: rgba(0, 0, 0, 0.6);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-            z-index: 10;
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 60px; height: 60px; background: rgba(0, 0, 0, 0.6); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none; z-index: 10;
         }
-
         .video-play-icon::after {
-            content: '';
-            width: 0;
-            height: 0;
-            border-left: 18px solid white;
-            border-top: 12px solid transparent;
-            border-bottom: 12px solid transparent;
-            margin-left: 4px;
+            content: ''; width: 0; height: 0;
+            border-left: 18px solid white; border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent; margin-left: 4px;
         }
 
-        /* 图片标题 */
+        /* 图片标题 & PID */
         .image-title {
-            padding: 10px;
-            font-size: 13px;
-            color: #666;
-            word-break: break-word;
-            line-height: 1.5;
-            min-height: 45px;
-            background: #fafafa;
-            border-top: 1px solid #eee;
+            padding: 10px; font-size: 13px; color: #666;
+            word-break: break-word; line-height: 1.5;
+            background: #fafafa; border-top: 1px solid #eee;
+        }
+        .pid-text {
+            display: block; font-size: 11px; color: #999;
+            margin-top: 4px; font-family: monospace;
         }
 
         /* 展开按钮 */
         .expand-btn {
-            grid-column: 1 / -1;
-            padding: 20px;
-            background: #f5f5f5;
-            border: 2px dashed #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            text-align: center;
-            color: #666;
-            font-size: 15px;
-            transition: all 0.2s;
-            font-weight: 500;
+            grid-column: 1 / -1; padding: 20px; background: #f5f5f5;
+            border: 2px dashed #ddd; border-radius: 6px; cursor: pointer;
+            text-align: center; color: #666; font-size: 15px;
+            transition: all 0.2s; font-weight: 500;
         }
-
-        .expand-btn:hover {
-            background: #e8f4fd;
-            border-color: #2196F3;
-            color: #2196F3;
-        }
+        .expand-btn:hover { background: #e8f4fd; border-color: #2196F3; color: #2196F3; }
 
         /* 模态框 */
         .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.95);
-            justify-content: center;
-            align-items: center;
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0;
+            width: 100%; height: 100%; background-color: rgba(0,0,0,0.95);
+            justify-content: center; align-items: center;
         }
-
-        .modal.show { 
-            display: flex; 
-        }
-
+        .modal.show { display: flex; }
         .modal-content-wrapper {
-            position: relative;
-            max-width: 90%;
-            max-height: 90vh;
-            display: flex;
-            align-items: center;
+            position: relative; max-width: 90%; max-height: 90vh;
+            display: flex; align-items: center;
         }
-
         .modal-content {
-            max-width: 90vw;
-            max-height: 90vh;
-            object-fit: contain;
-            display: block;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-width: 90vw; max-height: 90vh; object-fit: contain;
+            display: block; box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-
         .modal-nav {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            font-size: 40px;
-            padding: 20px;
-            cursor: pointer;
-            border-radius: 50%;
-            transition: background 0.3s;
-            z-index: 1002;
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.2); color: white; border: none;
+            font-size: 40px; padding: 20px; cursor: pointer; border-radius: 50%;
+            transition: background 0.3s; z-index: 1002;
         }
-
-        .modal-nav:hover { 
-            background: rgba(255,255,255,0.4); 
-        }
-
-        .modal-nav.prev { 
-            left: -60px; 
-        }
-
-        .modal-nav.next { 
-            right: -60px; 
-        }
-
+        .modal-nav:hover { background: rgba(255,255,255,0.4); }
+        .modal-nav.prev { left: -60px; }
+        .modal-nav.next { right: -60px; }
         .modal-close {
-            position: absolute;
-            top: -40px;
-            right: 0;
-            color: #ccc;
-            font-size: 30px;
-            cursor: pointer;
-            z-index: 1001;
+            position: absolute; top: -40px; right: 0; color: #ccc;
+            font-size: 30px; cursor: pointer; z-index: 1001;
         }
-
-        .modal-close:hover { 
-            color: white; 
-        }
-
+        .modal-close:hover { color: white; }
         .modal-title {
-            position: absolute;
-            bottom: -40px;
-            left: 0;
-            right: 0;
-            color: white;
-            text-align: center;
-            font-size: 14px;
-            z-index: 1001;
+            position: absolute; bottom: -40px; left: 0; right: 0;
+            color: white; text-align: center; font-size: 14px; z-index: 1001;
         }
 
         /* 分页 */
         .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin-top: 30px;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex; justify-content: center; align-items: center; gap: 15px;
+            margin-top: 30px; padding: 20px; background: white;
+            border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-
         .pagination button {
-            padding: 10px 24px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-            background: #2196F3;
-            color: white;
-            font-weight: 500;
+            padding: 10px 24px; border: none; border-radius: 4px;
+            cursor: pointer; font-size: 14px; transition: all 0.2s;
+            background: #2196F3; color: white; font-weight: 500;
         }
-
         .pagination button:hover:not(:disabled) {
-            background: #1976D2;
-            transform: translateY(-2px);
+            background: #1976D2; transform: translateY(-2px);
             box-shadow: 0 2px 8px rgba(33, 150, 243, 0.4);
         }
+        .pagination button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .page-info { font-size: 14px; color: #666; font-weight: 500; }
 
-        .pagination button:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .page-info {
-            font-size: 14px;
-            color: #666;
-            font-weight: 500;
-        }
-
-        .loading { 
-            text-align: center; 
-            padding: 60px 20px; 
-            color: #666; 
-            font-size: 16px;
-            width: 100%; 
-        }
+        .loading { text-align: center; padding: 60px 20px; color: #666; font-size: 16px; width: 100%; }
 
         /* 响应式 */
-        @media (max-width: 1200px) {
-            .preview-grid {
-                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            }
-        }
-
         @media (max-width: 768px) {
-            .sidebar {
-                width: 220px;
-            }
-            
-            /* 修复移动端收起时的位移问题 */
-            .sidebar.collapsed {
-                transform: translateX(-220px);
-            }
-            
-            .main-wrapper {
-                margin-left: 0;
-            }
-            
-            .preview-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 10px;
-            }
-            
-            .sidebar-toggle {
-                left: 10px;
-                top: 10px;
-                width: 45px;
-                height: 45px;
-            }
-            
-            .artist-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
+            .sidebar { width: 220px; }
+            .sidebar.collapsed { transform: translateX(-220px); }
+            .main-wrapper { margin-left: 0; }
+            .preview-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+            .sidebar-toggle { left: 10px; top: 10px; width: 45px; height: 45px; }
+            .artist-header { flex-direction: column; align-items: flex-start; gap: 8px; }
         }
     </style>
 </head>
 <body>
     <!-- 侧边栏 -->
     <aside class="sidebar collapsed" id="sidebar">
+        <!-- 搜索区域 -->
+        <div class="search-area">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索 PID / 标题 / 画师...">
+            <div class="search-nav" id="searchNav">
+                <span id="searchCount">0 结果</span>
+                <div>
+                    <button onclick="navigateSearch(-1)">↑</button>
+                    <button onclick="navigateSearch(1)">↓</button>
+                </div>
+            </div>
+        </div>
+
         <div class="sidebar-header">
             <h3>画师列表</h3>
         </div>
@@ -552,92 +312,43 @@
 
     <script>
         // --- utils.js 内容 ---
-        function replaceDotBeforeExt(name) {
-            const lastDotIdx = name.lastIndexOf('.');
-            if (lastDotIdx === -1) return name;
-            const beforeExtDotIdx = lastDotIdx - 1;
-            if (beforeExtDotIdx >= 0 && name[beforeExtDotIdx] === '.') {
-                return name.substring(0, beforeExtDotIdx) + '．' + name.substring(beforeExtDotIdx + 1);
-            }
-            return name;
-        }
-
-        function getUnicodeCategory(char) {
-            const code = char.charCodeAt(0);
-            if (code < 32 || (code >= 127 && code <= 159)) return 'Cc';
-            if (code >= 0x200B && code <= 0x200F) return 'Cf';
-            if (code >= 0x202A && code <= 0x202E) return 'Cf';
-            return 'Other';
-        }
-
-        function normalizeName(name) {
-            let nameNoControl = name.split('').filter(c => {
-                const cat = getUnicodeCategory(c);
-                return cat !== 'Cc' && cat !== 'Cf';
-            }).join('');
-            
-            const table = { 
-                '\\': '＼', '/': '／', ':': '：', '*': '＊', 
-                '?': '？', '"': '＂', '<': '＜', '>': '＞', '|': '｜' 
-            };
-            
-            let replaced = nameNoControl.split('').map(c => table[c] || c).join('');
-            replaced = replaced.replace(/~/g, '～');
-            replaced = replaced.replace(/%/g, '_');
-            replaced = replaceDotBeforeExt(replaced);
-            
-            const lastDotIdx = replaced.lastIndexOf('.');
-            if (lastDotIdx !== -1 && lastDotIdx > 0 && replaced[lastDotIdx - 1] === '　') {
-                replaced = replaced.substring(0, lastDotIdx - 1) + replaced.substring(lastDotIdx);
-            }
-            
-            if (replaced.includes('🐈⬛')) {
-                    replaced = replaced.replace(/🐈⬛/g, '🐈‍⬛');
-            }
-            
-            return replaced;
-        }
-
-        // 生成真实文件的URL（用于模态框播放）
         function generateFileName(item) {
-            if (window.DEMO_MODE) {
-                return `https://picsum.photos/id/${item.idNum % 1000}/800/800`;
-            }
-            // 简化命名规则
+            if (window.DEMO_MODE) return `https://picsum.photos/id/${item.idNum % 1000}/800/800`;
             const fileName = item.id.replace('_p', '-') + '.' + item.ext;
             return window.CDN_BASE + fileName;
         }
 
-        // ========== 修复：生成预览图 URL ==========
         function getThumbnailUrl(item) {
-            // 转换ID格式
             const baseName = item.id.replace('_p', '-');
-            
-            // 如果是视频（webm），预览图使用 .jpg（你上传的同名封面）
-            // 如果是普通图片，使用原始扩展名（如 .jpg, .png 等）
+            // 如果是视频（webm），预览图使用 .jpg；普通图片使用原始扩展名
             const ext = item.ext.toLowerCase() === 'webm' ? 'jpg' : item.ext;
-            
-            const fileName = baseName + '.' + ext;
-            return window.CDN_BASE + fileName;
+            return window.CDN_BASE + baseName + '.' + ext;
         }
 
-        function getImageTitle(item) {
-            return item.title;
-        }
+        function getImageTitle(item) { return item.title; }
         // --- utils.js 结束 ---
 
         // --- gallery.js 内容 ---
         // 全局配置
         window.CDN_BASE = 'https://p1.dlozs.top/';
         const MAX_ITEMS_BEFORE_EXPAND = 50;
-        const ARTISTS_PER_PAGE = 1; 
 
         // 全局变量
         let jsonData = [];
         let groupedData = [];
+        let categoriesData = {}; // 存储分类映射
+        let categoryStructure = []; // 存储渲染用的树状结构
+        
         let currentPage = 1;
         let expandedArtists = new Set();
+        let expandedCategories = new Set(); // 记录展开的分类
         let targetArtistId = null;
+        let targetItemId = null; // 用于搜索高亮定位
+
+        // 搜索相关
+        let searchResults = [];
+        let currentSearchIndex = -1;
+        let searchTimeout = null;
 
         // 模态框相关
         let currentViewingList = [];
@@ -645,46 +356,52 @@
 
         // 懒加载观察器
         let imageObserver;
-
-        // 侧边栏状态
         let sidebarCollapsed = true;
 
-        // 页面加载时自动读取 data.json
+        // 页面加载
         window.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             targetArtistId = urlParams.get('artist');
+            
+            // 绑定搜索事件
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => performSearch(e.target.value), 300);
+            });
+
             loadJSON();
         });
 
-        // 加载JSON数据（支持多文件合并）
+        // 加载JSON数据
         async function loadJSON() {
             try {
-                // 步骤1：读取 json/index.json 获取文件列表
-                const indexResponse = await fetch('json/index.json');
-                if (!indexResponse.ok) {
-                    throw new Error('无法加载 json/index.json');
-                }
-                const indexData = await indexResponse.json();
+                // 并行加载：数据和分类
+                const [indexRes, catRes] = await Promise.all([
+                    fetch('json/index.json'),
+                    fetch('json/categories.json').catch(() => ({ ok: false })) // 分类文件可能不存在
+                ]);
+
+                if (!indexRes.ok) throw new Error('无法加载 json/index.json');
+                const indexData = await indexRes.json();
                 
                 if (!indexData.files || indexData.files.length === 0) {
                     throw new Error('index.json 中没有文件列表');
                 }
-                
-                // 步骤2：并行加载所有数据文件
+
+                // 加载分类数据
+                if (catRes.ok) {
+                    categoriesData = await catRes.json();
+                }
+
+                // 加载画师数据
                 const dataPromises = indexData.files.map(fileName => 
-                    fetch(`json/${fileName}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`无法加载 ${fileName}`);
-                            }
-                            return response.json();
-                        })
+                    fetch(`json/${fileName}`).then(r => {
+                        if (!r.ok) throw new Error(`无法加载 ${fileName}`);
+                        return r.json();
+                    })
                 );
-                
-                // 步骤3：等待所有文件加载完成
                 const dataArrays = await Promise.all(dataPromises);
-                
-                // 步骤4：合并所有数据
                 jsonData = dataArrays.flat();
                 
                 proceedWithData();
@@ -703,7 +420,6 @@
                 { id: '102', name: '画师 Beta' }, 
                 { id: '103', name: '画师 Gamma' }
             ];
-            
             let globalIndex = 1;
             artists.forEach(artist => {
                 for(let i=1; i<=6; i++) {
@@ -716,27 +432,12 @@
                     });
                 }
             });
-
             jsonData = demoData;
+            categoriesData = { "演示分类": ["101", "102"] }; // 假分类数据
             proceedWithData();
         }
 
-        function proceedWithData() {
-            groupByUser();
-            initLazyLoad();
-            renderSidebar();
-            
-            if (targetArtistId) {
-                const artistIndex = groupedData.findIndex(g => g.userId == targetArtistId);
-                if (artistIndex !== -1) {
-                    currentPage = artistIndex + 1;
-                }
-            }
-            
-            renderPage();
-        }
-
-        // 按用户分组
+        // ========== 修复：补全被删除的 groupByUser 函数 ==========
         function groupByUser() {
             const groups = {};
             jsonData.forEach((item, index) => {
@@ -752,61 +453,186 @@
             });
             groupedData = Object.values(groups);
         }
+        // ========== 修复结束 ==========
 
-        // 渲染侧边栏
+        function proceedWithData() {
+            groupByUser(); // 先分组
+            buildCategoryTree(); // 再构建分类树
+            initLazyLoad();
+            renderSidebar();
+            
+            if (targetArtistId) {
+                const artistIndex = groupedData.findIndex(g => g.userId == targetArtistId);
+                if (artistIndex !== -1) currentPage = artistIndex + 1;
+            }
+            
+            renderPage();
+        }
+
+        // 构建分类树
+        function buildCategoryTree() {
+            // 1. 初始化分类桶
+            const buckets = {};
+            // 确保“未分类”存在
+            buckets["未分类"] = [];
+
+            // 2. 将 categoriesData 中的分类初始化
+            for (let cat in categoriesData) {
+                buckets[cat] = [];
+            }
+
+            // 3. 将画师分配到桶中
+            // 反转 userId -> categoryName 的映射以便快速查找
+            const userToCategory = {};
+            for (let cat in categoriesData) {
+                categoriesData[cat].forEach(uid => {
+                    userToCategory[uid] = cat;
+                });
+            }
+
+            groupedData.forEach(group => {
+                const catName = userToCategory[group.userId] || "未分类";
+                // 存储完整的 group 对象
+                buckets[catName].push(group);
+            });
+
+            // 4. 转换为数组以便渲染，同时保留“未分类”在最后
+            categoryStructure = Object.keys(buckets).map(key => ({
+                name: key,
+                groups: buckets[key]
+            })).sort((a, b) => {
+                if (a.name === "未分类") return 1;
+                if (b.name === "未分类") return -1;
+                return a.name.localeCompare(b.name, 'zh-CN');
+            });
+
+            // 默认展开所有分类（或者只展开第一个，看需求，这里选择全部展开方便查看）
+            categoryStructure.forEach(cat => expandedCategories.add(cat.name));
+        }
+
+        // 渲染侧边栏（支持分类和折叠）
         function renderSidebar() {
             const nav = document.getElementById('sidebarNav');
             nav.innerHTML = '';
-            
-            groupedData.forEach((group, index) => {
-                const item = document.createElement('div');
-                item.className = 'nav-item';
-                item.dataset.userId = group.userId;
-                item.dataset.page = index + 1;
-                
-                const nameDiv = document.createElement('div');
-                nameDiv.className = 'nav-item-name';
-                nameDiv.textContent = group.user;
-                
-                const countDiv = document.createElement('div');
-                countDiv.className = 'nav-item-count';
-                countDiv.textContent = `${group.items.length} 张`;
-                
-                item.appendChild(nameDiv);
-                item.appendChild(countDiv);
-                
-                item.onclick = () => {
-                    goToPage(index + 1);
-                    if (window.innerWidth <= 768) {
-                        toggleSidebar();
-                    }
-                };
-                
-                nav.appendChild(item);
+
+            categoryStructure.forEach(cat => {
+                const groupDiv = document.createElement('div');
+                groupDiv.className = `category-group ${expandedCategories.has(cat.name) ? '' : 'collapsed'}`;
+
+                // 分类头部
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `<span>${cat.name} (${cat.groups.length})</span><span class="arrow">▼</span>`;
+                header.onclick = () => toggleCategory(cat.name);
+                groupDiv.appendChild(header);
+
+                // 分类内容
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'category-content';
+
+                cat.groups.forEach((group) => {
+                    const item = document.createElement('div');
+                    item.className = 'nav-item';
+                    item.dataset.userId = group.userId;
+                    item.dataset.page = groupedData.indexOf(group) + 1; // 找到该画师在全局列表中的页码
+                    
+                    item.innerHTML = `
+                        <span>${group.user}</span>
+                        <span class="nav-item-count">${group.items.length}张</span>
+                    `;
+                    
+                    item.onclick = () => {
+                        goToPage(parseInt(item.dataset.page));
+                        if (window.innerWidth <= 768) toggleSidebar();
+                    };
+                    contentDiv.appendChild(item);
+                });
+
+                groupDiv.appendChild(contentDiv);
+                nav.appendChild(groupDiv);
             });
-            
+
             updateSidebarActive();
         }
 
-        // 更新侧边栏激活状态
+        function toggleCategory(catName) {
+            if (expandedCategories.has(catName)) {
+                expandedCategories.delete(catName);
+            } else {
+                expandedCategories.add(catName);
+            }
+            renderSidebar();
+        }
+
         function updateSidebarActive() {
             document.querySelectorAll('.nav-item').forEach(item => {
                 const page = parseInt(item.dataset.page);
                 if (page === currentPage) {
                     item.classList.add('active');
+                    // 确保父级分类是展开的
+                    const parentGroup = item.closest('.category-group');
+                    if (parentGroup) parentGroup.classList.remove('collapsed');
                 } else {
                     item.classList.remove('active');
                 }
             });
         }
 
-        // 切换侧边栏
+        // 搜索逻辑
+        function performSearch(query) {
+            const searchNav = document.getElementById('searchNav');
+            const countSpan = document.getElementById('searchCount');
+            
+            if (!query || query.trim() === '') {
+                searchResults = [];
+                currentSearchIndex = -1;
+                searchNav.classList.remove('active');
+                return;
+            }
+
+            const lowerQ = query.toLowerCase();
+            searchResults = jsonData.filter(item => {
+                return (item.id && item.id.toString().includes(lowerQ)) ||
+                       (item.title && item.title.toLowerCase().includes(lowerQ)) ||
+                       (item.user && item.user.toLowerCase().includes(lowerQ));
+            });
+
+            if (searchResults.length > 0) {
+                searchNav.classList.add('active');
+                countSpan.textContent = `${searchResults.length} 结果`;
+                currentSearchIndex = 0; // 默认从第一个开始
+                navigateSearch(0); // 跳转到第一个
+            } else {
+                searchNav.classList.remove('active');
+            }
+        }
+
+        function navigateSearch(direction) {
+            if (searchResults.length === 0) return;
+
+            currentSearchIndex += direction;
+            if (currentSearchIndex < 0) currentSearchIndex = searchResults.length - 1;
+            if (currentSearchIndex >= searchResults.length) currentSearchIndex = 0;
+
+            const targetItem = searchResults[currentSearchIndex];
+            targetItemId = targetItem.id; // 标记需要高亮的ID
+
+            // 找到该作品所属的画组
+            const targetGroup = groupedData.find(g => g.userId === targetItem.userId);
+            if (targetGroup) {
+                const targetPage = groupedData.indexOf(targetGroup) + 1;
+                
+                // 确保该画师的作品全部展开（因为搜索结果可能在折叠列表里）
+                expandedArtists.add(targetItem.userId);
+                
+                goToPage(targetPage);
+            }
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const mainWrapper = document.querySelector('.main-wrapper');
-            
             sidebarCollapsed = !sidebarCollapsed;
-            
             if (sidebarCollapsed) {
                 sidebar.classList.add('collapsed');
                 mainWrapper.classList.add('expanded');
@@ -816,10 +642,8 @@
             }
         }
 
-        // 初始化懒加载
         function initLazyLoad() {
             if (imageObserver) imageObserver.disconnect();
-            
             imageObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
                     if (entry.isIntersecting) {
@@ -833,9 +657,7 @@
                         }
                     }
                 });
-            }, {
-                rootMargin: '400px'
-            });
+            }, { rootMargin: '400px' });
         }
 
         // 渲染页面
@@ -886,28 +708,35 @@
             displayItems.forEach((item) => {
                 const previewDiv = document.createElement('div');
                 previewDiv.className = 'preview-item';
+                previewDiv.id = 'item-' + item.id; // 用于滚动定位
                 
+                // 如果是搜索目标，添加高亮类
+                if (targetItemId === item.id) {
+                    previewDiv.classList.add('highlight-result');
+                    // 滚动到该元素
+                    setTimeout(() => {
+                        previewDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // 闪烁几下后移除高亮（可选，这里保留直到下次搜索）
+                    }, 100);
+                }
+
                 const mediaWrapper = document.createElement('div');
                 mediaWrapper.className = 'preview-media-wrapper';
                 
                 const ext = item.ext.toLowerCase();
                 const isVideo = ext === 'webm';
                 
-                // 使用 img 标签加载预览图
                 const img = document.createElement('img');
                 img.className = 'preview-media img-loading';
                 img.dataset.src = getThumbnailUrl(item);
-                
                 imageObserver.observe(img);
                 mediaWrapper.appendChild(img);
 
-                // 如果是视频，添加标识
                 if (isVideo) {
                     const badge = document.createElement('div');
                     badge.className = 'video-badge';
                     badge.textContent = 'VIDEO';
                     mediaWrapper.appendChild(badge);
-                    
                     const playIcon = document.createElement('div');
                     playIcon.className = 'video-play-icon';
                     mediaWrapper.appendChild(playIcon);
@@ -915,9 +744,13 @@
                 
                 previewDiv.appendChild(mediaWrapper);
                 
+                // 标题和 PID
                 const titleDiv = document.createElement('div');
                 titleDiv.className = 'image-title';
-                titleDiv.textContent = getImageTitle(item);
+                titleDiv.innerHTML = `
+                    <div>${getImageTitle(item)}</div>
+                    <span class="pid-text">PID: ${item.id}</span>
+                `;
                 previewDiv.appendChild(titleDiv);
                 
                 previewDiv.onclick = () => openPreview(group.items, item._originalIndex);
@@ -940,7 +773,14 @@
             contentDiv.appendChild(cardDiv);
             
             updateSidebarActive();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            // 如果不是搜索跳转，才滚到顶部
+            if (!targetItemId) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                // 清除标记，防止普通翻页也触发定位
+                targetItemId = null;
+            }
         }
 
         // 打开预览
@@ -963,32 +803,32 @@
             let mediaEl;
 
             if (ext === 'webm') {
-                // 视频：加载真实的 .webm 文件
                 mediaEl = document.createElement('video');
                 mediaEl.controls = true;
                 mediaEl.autoplay = true;
                 mediaEl.loop = true;
                 mediaEl.playsInline = true;
             } else {
-                // 图片：加载真实的文件
                 mediaEl = document.createElement('img');
             }
 
             mediaEl.className = 'modal-content';
-            // 使用 generateFileName 获取真实文件路径
             mediaEl.src = generateFileName(item);
             container.appendChild(mediaEl);
 
             document.getElementById('modalTitle').textContent = getImageTitle(item);
-
-            if(ext === 'webm') {
-                mediaEl.play().catch(()=>{});
-            }
+            if(ext === 'webm') mediaEl.play().catch(()=>{});
         }
 
-        // 切换图片
+        // 切换图片（支持搜索模式下的切换）
         function changeImage(direction) {
             if (!currentViewingList || currentViewingList.length === 0) return;
+            
+            // 如果正在搜索结果模式下浏览，这里可以有两种逻辑：
+            // 1. 只在当前画师内切换（常规）
+            // 2. 直接跳到下一个搜索结果（类似 Ctrl+F 的行为）
+            // 根据"别把搜索结果都放一块了"的需求，这里保持常规逻辑，用户想跳下一个搜索结果用侧边栏的按钮
+            
             const newIndex = currentViewingIndex + direction;
             if (newIndex >= 0 && newIndex < currentViewingList.length) {
                 currentViewingIndex = newIndex;
@@ -996,27 +836,16 @@
             }
         }
 
-        // 关闭模态框
-        function closeModal(event) {
-            if (event.target.id === 'imageModal') performClose();
-        }
-
-        function closeModalDirect() { 
-            performClose(); 
-        }
-
+        function closeModal(event) { if (event.target.id === 'imageModal') performClose(); }
+        function closeModalDirect() { performClose(); }
         function performClose() {
             const container = document.getElementById('modalContentContainer');
             const video = container.querySelector('video');
-            if (video) {
-                video.pause();
-                video.src = '';
-            }
+            if (video) { video.pause(); video.src = ''; }
             container.innerHTML = ''; 
             document.getElementById('imageModal').classList.remove('show');
         }
 
-        // 翻页
         function goToPage(page) {
             const totalPages = groupedData.length;
             if (page < 1 || page > totalPages) return;
@@ -1024,15 +853,23 @@
             renderPage();
         }
 
-        // 键盘监听
         window.addEventListener('keydown', function(e) {
             const modal = document.getElementById('imageModal');
             const isModalOpen = modal.classList.contains('show');
-
             if (isModalOpen) {
                 if (e.key === 'ArrowLeft') changeImage(-1);
                 else if (e.key === 'ArrowRight') changeImage(1);
                 else if (e.key === 'Escape') performClose();
+            } else {
+                // 侧边栏关闭状态下，F3 或 Ctrl+F 聚焦搜索框
+                if ((e.key === 'f' && (e.ctrlKey || e.metaKey)) || e.key === 'F3') {
+                    e.preventDefault();
+                    const input = document.getElementById('searchInput');
+                    if (input) {
+                        input.focus();
+                        if (!sidebarCollapsed) toggleSidebar(); // 确保侧边栏打开
+                    }
+                }
             }
         });
     </script>
