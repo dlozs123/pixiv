@@ -4,30 +4,52 @@ window.CDN_BASE = 'https://p1.dlozs.top/';
 let jsonData = [];
 let groupedData = [];
 
-// 页面加载时自动读取 data.json
+// 页面加载时自动读取数据
 window.addEventListener('DOMContentLoaded', function() {
     loadJSON();
 });
 
+// ========== 修改部分：支持多文件加载 ==========
 // 加载JSON数据
-function loadJSON() {
-    fetch('data.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('无法加载 data.json');
-            }
-            return response.json();
-        })
-        .then(data => {
-            jsonData = data;
-            groupByUser();
-            renderArtistGrid();
-        })
-        .catch(error => {
-            document.getElementById('artistGrid').innerHTML = 
-                `<div class="loading">加载失败: ${error.message}<br>请确保 data.json 文件存在</div>`;
-        });
+async function loadJSON() {
+    try {
+        // 步骤1：读取 json/index.json 获取文件列表
+        const indexResponse = await fetch('json/index.json');
+        if (!indexResponse.ok) {
+            throw new Error('无法加载 json/index.json');
+        }
+        const indexData = await indexResponse.json();
+        
+        if (!indexData.files || indexData.files.length === 0) {
+            throw new Error('index.json 中没有文件列表');
+        }
+        
+        // 步骤2：并行加载所有数据文件
+        const dataPromises = indexData.files.map(fileName => 
+            fetch(`json/${fileName}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`无法加载 ${fileName}`);
+                    }
+                    return response.json();
+                })
+        );
+        
+        // 步骤3：等待所有文件加载完成
+        const dataArrays = await Promise.all(dataPromises);
+        
+        // 步骤4：合并所有数据
+        jsonData = dataArrays.flat();
+        
+        groupByUser();
+        renderArtistGrid();
+        
+    } catch (error) {
+        document.getElementById('artistGrid').innerHTML = 
+            `<div class="loading">加载失败: ${error.message}</div>`;
+    }
 }
+// ========== 修改结束 ==========
 
 // 按用户分组
 function groupByUser() {

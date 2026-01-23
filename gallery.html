@@ -219,6 +219,7 @@
             transform: scale(1.08);
         }
 
+        /* 预览媒体样式 */
         .preview-media-wrapper {
             position: relative;
             padding-top: 100%;
@@ -236,7 +237,8 @@
             background: #e0e0e0;
         }
 
-        .preview-media.loading {
+        /* 图片的loading动画 */
+        .preview-media.img-loading {
             background: linear-gradient(90deg, #e0e0e0 25%, #f0f0f0 50%, #e0e0e0 75%);
             background-size: 200% 100%;
             animation: loading 1.5s infinite;
@@ -500,7 +502,7 @@
     </style>
 </head>
 <body>
-    <!-- 修改点 1：侧边栏默认添加 collapsed 类 -->
+    <!-- 侧边栏 -->
     <aside class="sidebar collapsed" id="sidebar">
         <div class="sidebar-header">
             <h3>画师列表</h3>
@@ -515,7 +517,7 @@
         <span class="toggle-icon">☰</span>
     </button>
 
-    <!-- 修改点 2：主内容区域默认添加 expanded 类 -->
+    <!-- 主内容区域 -->
     <main class="main-wrapper expanded">
         <div class="container">
             <!-- 顶部导航 -->
@@ -596,23 +598,27 @@
             return replaced;
         }
 
+        // 生成真实文件的URL（用于模态框播放）
         function generateFileName(item) {
-            // 如果是演示模式，使用 Picsum
             if (window.DEMO_MODE) {
-                return `https://picsum.photos/id/${item.id % 1000}/800/800`;
+                return `https://picsum.photos/id/${item.idNum % 1000}/800/800`;
             }
+            // 简化命名规则
+            const fileName = item.id.replace('_p', '-') + '.' + item.ext;
+            return window.CDN_BASE + fileName;
+        }
 
-            const fileName = `${item.id}-${item.title}.${item.ext}`;
-            let normalized = normalizeName(fileName);
+        // ========== 修复：生成预览图 URL ==========
+        function getThumbnailUrl(item) {
+            // 转换ID格式
+            const baseName = item.id.replace('_p', '-');
             
-            const hashIndex = normalized.indexOf('#');
-            if (hashIndex !== -1) {
-                normalized = normalized.substring(0, hashIndex);
-            }
+            // 如果是视频（webm），预览图使用 .jpg（你上传的同名封面）
+            // 如果是普通图片，使用原始扩展名（如 .jpg, .png 等）
+            const ext = item.ext.toLowerCase() === 'webm' ? 'jpg' : item.ext;
             
-            const encoded = encodeURIComponent(normalized).replace(/%2F/g, '/');
-            
-            return window.CDN_BASE + encoded;
+            const fileName = baseName + '.' + ext;
+            return window.CDN_BASE + fileName;
         }
 
         function getImageTitle(item) {
@@ -640,7 +646,7 @@
         // 懒加载观察器
         let imageObserver;
 
-        // 修改点 3：侧边栏状态默认为 true (关闭)
+        // 侧边栏状态
         let sidebarCollapsed = true;
 
         // 页面加载时自动读取 data.json
@@ -650,24 +656,43 @@
             loadJSON();
         });
 
-        // 加载JSON数据
-        function loadJSON() {
-            fetch('data.json')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('无法加载 data.json');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    jsonData = data;
-                    proceedWithData();
-                })
-                .catch(error => {
-                    console.log('使用演示数据:', error.message);
-                    // 生成演示数据以供展示
-                    generateMockData();
-                });
+        // 加载JSON数据（支持多文件合并）
+        async function loadJSON() {
+            try {
+                // 步骤1：读取 json/index.json 获取文件列表
+                const indexResponse = await fetch('json/index.json');
+                if (!indexResponse.ok) {
+                    throw new Error('无法加载 json/index.json');
+                }
+                const indexData = await indexResponse.json();
+                
+                if (!indexData.files || indexData.files.length === 0) {
+                    throw new Error('index.json 中没有文件列表');
+                }
+                
+                // 步骤2：并行加载所有数据文件
+                const dataPromises = indexData.files.map(fileName => 
+                    fetch(`json/${fileName}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`无法加载 ${fileName}`);
+                            }
+                            return response.json();
+                        })
+                );
+                
+                // 步骤3：等待所有文件加载完成
+                const dataArrays = await Promise.all(dataPromises);
+                
+                // 步骤4：合并所有数据
+                jsonData = dataArrays.flat();
+                
+                proceedWithData();
+                
+            } catch (error) {
+                console.log('使用演示数据:', error.message);
+                generateMockData();
+            }
         }
 
         function generateMockData() {
@@ -681,7 +706,6 @@
             
             let globalIndex = 1;
             artists.forEach(artist => {
-                // 每个画师生成一些作品
                 for(let i=1; i<=6; i++) {
                     demoData.push({
                         id: globalIndex++,
@@ -803,7 +827,7 @@
                         const src = img.dataset.src;
                         if (src) {
                             img.src = src;
-                            img.classList.remove('loading');
+                            img.classList.remove('img-loading');
                             img.removeAttribute('data-src');
                             imageObserver.unobserve(img);
                         }
@@ -869,14 +893,15 @@
                 const ext = item.ext.toLowerCase();
                 const isVideo = ext === 'webm';
                 
+                // 使用 img 标签加载预览图
                 const img = document.createElement('img');
-                img.className = 'preview-media loading';
-                img.dataset.src = generateFileName(item);
+                img.className = 'preview-media img-loading';
+                img.dataset.src = getThumbnailUrl(item);
                 
                 imageObserver.observe(img);
-                
                 mediaWrapper.appendChild(img);
-                
+
+                // 如果是视频，添加标识
                 if (isVideo) {
                     const badge = document.createElement('div');
                     badge.className = 'video-badge';
@@ -938,16 +963,19 @@
             let mediaEl;
 
             if (ext === 'webm') {
+                // 视频：加载真实的 .webm 文件
                 mediaEl = document.createElement('video');
                 mediaEl.controls = true;
                 mediaEl.autoplay = true;
                 mediaEl.loop = true;
                 mediaEl.playsInline = true;
             } else {
+                // 图片：加载真实的文件
                 mediaEl = document.createElement('img');
             }
 
             mediaEl.className = 'modal-content';
+            // 使用 generateFileName 获取真实文件路径
             mediaEl.src = generateFileName(item);
             container.appendChild(mediaEl);
 
