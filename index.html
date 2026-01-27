@@ -12,13 +12,22 @@
             <h1>图片归档页</h1>
         </header>
 
-        <!-- 这个容器现在会包含分类标题和各自的画师网格 -->
         <div id="artistGrid" class="artist-grid">
             <div class="loading">加载中...</div>
         </div>
     </div>
 
-    <script src="utils.js"></script>
+    <!-- 角色切换器 -->
+    <div class="character-switcher" id="characterSwitcher" style="display: none;">
+        <button class="switcher-btn" id="switcherBtn" title="切换角色">
+            <img id="currentCharAvatar" src="" alt="" class="avatar-img">
+            <span id="currentCharName" class="avatar-name"></span>
+        </button>
+        <div class="switcher-dropdown" id="switcherDropdown">
+            <!-- 角色头像列表动态生成 -->
+        </div>
+    </div>
+
     <script src="home.js"></script>
 </body>
 </html>
