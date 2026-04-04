@@ -682,7 +682,7 @@ body:has(#gallery-view.active) .mode-toggle {
 // ══════════════════════════════════════════════
 const CFG = {
   jsonBase: 'https://e.dlozs.top',
-  buckets: { sfw: 'https://pixiv.dlozs.top', nsfw: 'https://pixiv.dlozs.top' }
+  buckets: { sfw: 'https://pixiv.dlozs.top', nsfw: 'https://p1.dlozs.top' }
 };
 
 // ══════════════════════════════════════════════
@@ -739,7 +739,8 @@ const S = {
 // HELPERS
 // ══════════════════════════════════════════════
 function imgUrl(item, mode) {
-  return `${CFG.buckets[mode]}/${item.idNum}-${item.index}.${item.ext}`;
+  // All images converted to WebP format
+  return `${CFG.buckets[mode]}/${item.idNum}-${item.index}.webp`;
 }
 
 function isAnimated(ext) {
@@ -900,18 +901,11 @@ function initLazyLoad() {
         const src = el.dataset.src;
         if (src) {
           delete el.dataset.src;
-          if (el.tagName === 'IMG') {
-            el.src = src;
-            el.onload = el.onerror = () => {
-              el.classList.add('loaded');
-              el.closest('.thumb-wrap')?.classList.add('img-loaded');
-            };
-          } else {
-            // video: set src, mark loaded immediately (preload=none so no heavy fetch)
-            el.src = src;
+          el.src = src;
+          el.onload = el.onerror = () => {
             el.classList.add('loaded');
             el.closest('.thumb-wrap')?.classList.add('img-loaded');
-          }
+          };
         }
       } else {
         // Exit viewport far away: release memory if loaded
@@ -1202,24 +1196,15 @@ function renderGrid(container, page, key) {
     wrap.className = 'thumb-wrap';
 
     const isAnim = isAnimated(item.ext);
-    let media;
-    if (item.ext === 'webm' || item.ext === 'mp4') {
-      media = document.createElement('video');
-      media.className = 'thumb-img lazy';
-      media.muted = true; media.loop = true; media.playsInline = true;
-      media.preload = 'none';
-      media.dataset.src = imgUrl(item, S.mode);
-      media.addEventListener('mouseenter', () => { if (media.src) media.play().catch(()=>{}); });
-      media.addEventListener('mouseleave', () => { if (media.src) media.pause(); });
-    } else {
-      media = document.createElement('img');
-      media.className = 'thumb-img lazy';
-      media.dataset.src = imgUrl(item, S.mode);
-      media.alt = item.title || '';
-      media.decoding = 'async';
-      media.loading = 'lazy';
-    }
-    wrap.appendChild(media);
+    
+    // All images are WebP now - use img tag for everything
+    const img = document.createElement('img');
+    img.className = 'thumb-img lazy';
+    img.dataset.src = imgUrl(item, S.mode);
+    img.alt = item.title || '';
+    img.decoding = 'async';
+    img.loading = 'lazy';
+    wrap.appendChild(img);
 
     if (isAnim) {
       const badge = document.createElement('div');
@@ -1315,7 +1300,7 @@ function closeModal() {
   document.body.style.overflow = '';
   // Reset zoom
   const wrap = document.getElementById('modal-media-wrap');
-  const el = wrap.querySelector('img, video');
+  const el = wrap.querySelector('img');
   if (el) { el.style.transform = ''; M.scale = 1; }
 }
 
@@ -1324,23 +1309,16 @@ function showModalAt(idx) {
   const item = M.items[idx];
   const wrap = document.getElementById('modal-media-wrap');
   // Clear previous media
-  wrap.querySelectorAll('img, video').forEach(e => e.remove());
+  wrap.querySelectorAll('img').forEach(e => e.remove());
 
-  let el;
-  if (item.ext === 'webm' || item.ext === 'mp4') {
-    el = document.createElement('video');
-    el.className = 'modal-video';
-    el.src = imgUrl(item, S.mode);
-    el.controls = true; el.autoplay = true; el.loop = true; el.playsInline = true;
-  } else {
-    el = document.createElement('img');
-    el.className = 'modal-img';
-    el.src = imgUrl(item, S.mode);
-    el.alt = item.title || '';
-  }
-  el.style.transform = '';
+  // All images are WebP now - always use img tag
+  const img = document.createElement('img');
+  img.className = 'modal-img';
+  img.src = imgUrl(item, S.mode);
+  img.alt = item.title || '';
+  img.style.transform = '';
   M.scale = 1;
-  wrap.insertBefore(el, wrap.querySelector('.modal-info'));
+  wrap.insertBefore(img, wrap.querySelector('.modal-info'));
 
   document.getElementById('modal-counter').textContent = `${idx + 1} / ${M.items.length}`;
   document.getElementById('modal-info').textContent = item.title || item.idNum;
@@ -1373,7 +1351,7 @@ function setupModalTouch() {
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const dist = Math.hypot(dx, dy);
       const newScale = Math.max(1, Math.min(5, M.scale * (dist / M.pinchStart)));
-      const el = document.getElementById('modal-media-wrap').querySelector('img, video');
+      const el = document.getElementById('modal-media-wrap').querySelector('img');
       if (el) el.style.transform = `scale(${newScale})`;
     }
   }, { passive: false });
@@ -1381,7 +1359,7 @@ function setupModalTouch() {
   modal.addEventListener('touchend', e => {
     // Save scale if pinch just ended
     if (M.pinchStart) {
-      const el = document.getElementById('modal-media-wrap').querySelector('img, video');
+      const el = document.getElementById('modal-media-wrap').querySelector('img');
       if (el) {
         const mat = new DOMMatrix(getComputedStyle(el).transform);
         M.scale = isNaN(mat.a) ? 1 : mat.a;
