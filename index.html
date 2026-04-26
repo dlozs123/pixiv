@@ -1915,6 +1915,8 @@ self.onmessage = function(e) {
         }
         // Tap to navigate (left/right half) only if not zoomed
         if (M.scale <= 1.1 && Math.abs(dx) < 20 && Math.abs(dy) < 20) {
+          // 避免点击导航按钮、关闭按钮或视频时触发 tap 导航（防止移动端双次触发）
+          if (e.target.closest('.modal-nav') || e.target.closest('.modal-close') || e.target.tagName === 'VIDEO') return;
           const rect = modal.getBoundingClientRect();
           if (t1.clientX < rect.width / 2) modalPrev(); else modalNext();
         }
