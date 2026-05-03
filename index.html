@@ -1213,8 +1213,10 @@ self.onmessage = function(e) {
     }
 
     function thumbUrl(item, mode) {
-      const ext = (item.ext === 'webm' || item.ext === 'mp4') ? item.ext : 'webp';
-      return `${CFG.buckets[mode]}/thumbs/${item.idNum}-${item.index}.${ext}`;
+      if (item.ext === 'webm' || item.ext === 'mp4') {
+        return `${CFG.buckets[mode]}/${item.idNum}-${item.index}.${item.ext}`;
+      }
+      return `${CFG.buckets[mode]}/thumbs/${item.idNum}-${item.index}.webp`;
     }
 
     function isAnimated(ext) {
