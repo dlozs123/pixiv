@@ -1739,9 +1739,9 @@ self.onmessage = function(e) {
       if (shown < items.length) {
         const btn = document.createElement('button');
         btn.className = 'show-more-btn';
-        btn.textContent = `展开更多 (${items.length - shown} 张剩余)`;
+        btn.textContent = `展开全部 (${items.length - shown} 张剩余)`;
         btn.addEventListener('click', () => {
-          S.showMore[key] += 50;
+          S.showMore[key] = items.length;
           renderGrid(container, page, key);
           initLazyLoad();
         });
@@ -2093,7 +2093,7 @@ self.onmessage = function(e) {
     document.addEventListener('keydown', e => {
       const modal = document.getElementById('img-modal');
       if (!modal.classList.contains('show')) return;
-      if (e.key === 'Escape') closeModal();
+      if (e.key === 'Escape' || e.key === ' ') { e.preventDefault(); closeModal(); }
       if (e.key === 'ArrowLeft') modalPrev();
       if (e.key === 'ArrowRight') modalNext();
     });
