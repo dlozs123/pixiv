@@ -351,10 +351,15 @@
     }
 
     #char-fab {
-      right: 22px;
+      left: 76px;
       background: linear-gradient(135deg, var(--teal), #a05e2e);
       color: #ffffff;
       box-shadow: 0 4px 20px rgba(192, 122, 69, .35);
+      transition: left .3s var(--ease), opacity .25s, transform .25s, box-shadow .25s;
+    }
+
+    #char-fab.shifted {
+      left: calc(var(--sidebar-w) + 72px);
     }
 
     #char-fab:hover {
@@ -474,17 +479,12 @@
       cursor: not-allowed;
     }
 
-    /* ───── GALLERY LAYOUT ───── */
-    #gallery-view {
-      position: relative;
-    }
-
-    .gallery-layout {
+    /* ───── LAYOUT & SIDEBAR ───── */
+    .layout-wrapper {
       display: flex;
     }
 
-    /* ───── SIDEBAR ───── */
-    #sidebar {
+    .sidebar {
       width: var(--sidebar-w);
       position: fixed;
       top: var(--header-h);
@@ -500,11 +500,12 @@
       padding: 12px 0 80px;
     }
 
-    #sidebar.open {
+    .sidebar.open {
       transform: translateX(0);
     }
 
-    #sidebar-fab {
+    .sidebar-fab {
+      position: fixed;
       left: 16px;
       bottom: 28px;
       background: var(--surface);
@@ -518,16 +519,16 @@
       z-index: 70;
     }
 
-    #sidebar-fab.visible {
+    .sidebar-fab.visible {
       opacity: 1;
       pointer-events: all;
     }
 
-    #sidebar-fab.shifted {
+    .sidebar-fab.shifted {
       left: calc(var(--sidebar-w) + 12px);
     }
 
-    #sidebar-fab:hover {
+    .sidebar-fab:hover {
       color: var(--text);
       box-shadow: 0 4px 16px rgba(0, 0, 0, .15);
     }
@@ -585,16 +586,19 @@
       flex-shrink: 0;
     }
 
-    /* ───── GALLERY MAIN ───── */
-    #gallery-main {
+    /* ───── MAIN CONTENT ───── */
+    .main-content {
       flex: 1;
       min-height: 100vh;
-      padding: calc(var(--header-h) + 24px) 20px 40px;
       transition: margin-left .3s var(--ease);
     }
 
-    #gallery-main.sb-open {
+    .main-content.sb-open {
       margin-left: var(--sidebar-w);
+    }
+
+    #gallery-main {
+      padding: calc(var(--header-h) + 24px) 20px 40px;
     }
 
     .back-btn {
@@ -843,12 +847,12 @@
     }
 
     .modal-nav {
+      display: none !important;
       position: absolute;
       top: 0;
       bottom: 0;
       width: 28%;
       cursor: pointer;
-      display: flex;
       align-items: center;
       z-index: 5;
     }
@@ -886,8 +890,10 @@
     }
 
     .modal-media-wrap {
-      max-height: 95vh;
-      max-width: 90vw;
+      width: 100%;
+      height: 100%;
+      padding: 50px 10px 40px 10px;
+      box-sizing: border-box;
       position: relative;
       display: flex;
       align-items: center;
@@ -896,25 +902,29 @@
 
     .modal-img,
     .modal-video {
-      max-height: 95vh;
-      max-width: 90vw;
+      max-height: 100%;
+      max-width: 100%;
       object-fit: contain;
       border-radius: 3px;
       display: block;
-      touch-action: pinch-zoom;
+      touch-action: none;
+      transform-origin: center center;
     }
 
     .modal-info {
       position: absolute;
-      bottom: -32px;
-      left: 0;
-      right: 0;
+      bottom: 15px;
+      left: 10px;
+      right: 10px;
       text-align: center;
       font-size: 12px;
-      color: var(--text2);
+      color: rgba(255, 255, 255, .7);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+      z-index: 10;
+      pointer-events: none;
     }
 
     .modal-counter {
@@ -923,11 +933,12 @@
       left: 50%;
       transform: translateX(-50%);
       font-size: 12px;
-      color: var(--text2);
+      color: rgba(255, 255, 255, .7);
       background: rgba(0, 0, 0, .5);
       padding: 4px 12px;
       border-radius: 10px;
       backdrop-filter: blur(4px);
+      z-index: 10;
     }
 
     /* ───── EMPTY STATE ───── */
@@ -958,6 +969,16 @@
       .image-grid {
         grid-template-columns: repeat(4, 1fr);
       }
+      
+      .modal-counter,
+      .modal-info,
+      .modal-nav {
+        display: none !important;
+      }
+      
+      .modal-media-wrap {
+        padding: 0 !important;
+      }
     }
 
     @media (max-width: 750px) {
@@ -967,6 +988,10 @@
 
       :root {
         --sidebar-w: 230px;
+      }
+      
+      .main-content.sb-open {
+        margin-left: 0 !important;
       }
     }
 
@@ -1088,13 +1113,19 @@
 
   <!-- HOME VIEW -->
   <div class="view active" id="home-view">
-    <div class="home-wrap">
-      <div class="home-header">
-        <div class="home-title" id="home-title">画师一览</div>
-        <div class="home-subtitle" id="home-subtitle">选择右下角按钮切换角色</div>
-        <div id="home-char-label" class="home-char-label" style="display:none"></div>
+    <div class="layout-wrapper">
+      <nav id="home-sidebar" class="sidebar"></nav>
+      <button class="fab sidebar-fab" id="home-sidebar-fab" title="切换侧边栏">☰</button>
+      <div id="home-main" class="main-content">
+        <div class="home-wrap">
+          <div class="home-header">
+            <div class="home-title" id="home-title">画师一览</div>
+            <div class="home-subtitle" id="home-subtitle">选择右下角按钮切换角色</div>
+            <div id="home-char-label" class="home-char-label" style="display:none"></div>
+          </div>
+          <div id="home-categories"></div>
+        </div>
       </div>
-      <div id="home-categories"></div>
     </div>
 
     <!-- CHAR SELECTOR FAB -->
@@ -1114,13 +1145,13 @@
 
   <!-- GALLERY VIEW -->
   <div class="view" id="gallery-view">
-    <div class="gallery-layout">
+    <div class="layout-wrapper">
       <!-- SIDEBAR -->
-      <nav id="sidebar"></nav>
-      <button class="fab" id="sidebar-fab" title="切换侧边栏">☰</button>
+      <nav id="sidebar" class="sidebar"></nav>
+      <button class="fab sidebar-fab" id="sidebar-fab" title="切换侧边栏">☰</button>
 
       <!-- MAIN CONTENT -->
-      <div id="gallery-main">
+      <div id="gallery-main" class="main-content">
         <button class="back-btn" id="back-btn">← 返回主页</button>
         <div id="artist-page-content"></div>
         <div class="pagination" id="pagination"></div>
@@ -1197,6 +1228,7 @@ self.onmessage = function(e) {
       pages: [],         // [{pageNum, category, artistId, artistName, items, charBucketMode}]
       currentPage: 0,    // index into pages
       sidebarOpen: false,
+      homeSidebarOpen: false,
       showMore: {},      // artistId -> displayedCount (default 50)
       rendered: {},      // artistId -> already rendered count (for incremental append)
       modal: { items: [], idx: 0 },
@@ -1260,10 +1292,10 @@ self.onmessage = function(e) {
       });
       S.view = name;
       // FAB visibility
-      document.getElementById('char-fab').style.opacity = name === 'home' ? '' : '0';
-      document.getElementById('char-fab').style.pointerEvents = name === 'home' ? '' : 'none';
-      const sbFab = document.getElementById('sidebar-fab');
-      sbFab.classList.toggle('visible', name === 'gallery');
+      document.getElementById('char-fab').style.opacity = name === 'home' ? '1' : '0';
+      document.getElementById('char-fab').style.pointerEvents = name === 'home' ? 'all' : 'none';
+      document.getElementById('home-sidebar-fab').classList.toggle('visible', name === 'home');
+      document.getElementById('sidebar-fab').classList.toggle('visible', name === 'gallery');
     }
 
     // ══════════════════════════════════════════════
@@ -1432,9 +1464,37 @@ self.onmessage = function(e) {
       }
 
       const frag = document.createDocumentFragment();
-      for (const cat of catOrder) {
+      const homeSb = document.getElementById('home-sidebar');
+      homeSb.innerHTML = '';
+      const sbFrag = document.createDocumentFragment();
+
+      for (let i = 0; i < catOrder.length; i++) {
+        const cat = catOrder[i];
+        
+        // Sidebar category
+        const sbCat = document.createElement('div');
+        sbCat.className = 'sidebar-cat';
+        sbCat.textContent = cat;
+        sbCat.style.cursor = 'pointer';
+        sbCat.style.padding = '14px 16px';
+        sbCat.style.fontSize = '12px';
+        sbCat.style.borderBottom = '1px solid var(--border)';
+        sbCat.style.transition = 'background .2s';
+        sbCat.addEventListener('mouseenter', () => sbCat.style.background = 'var(--surface2)');
+        sbCat.addEventListener('mouseleave', () => sbCat.style.background = 'transparent');
+        sbCat.addEventListener('click', () => {
+          const target = document.getElementById(`cat-sec-${i}`);
+          if (target) {
+            const offset = target.getBoundingClientRect().top + window.scrollY - 80;
+            window.scrollTo({ top: offset, behavior: 'smooth' });
+            if (window.innerWidth < 768) toggleHomeSidebar(false);
+          }
+        });
+        sbFrag.appendChild(sbCat);
+
         const sec = document.createElement('div');
         sec.className = 'cat-section';
+        sec.id = `cat-sec-${i}`;
         const title = document.createElement('div');
         title.className = 'cat-title';
         title.textContent = cat;
@@ -1477,6 +1537,7 @@ self.onmessage = function(e) {
         frag.appendChild(sec);
       }
       container.appendChild(frag);
+      homeSb.appendChild(sbFrag);
 
       // Update header labels
       document.getElementById('home-char-label').textContent = S.activeChars.join(' × ');
@@ -1496,20 +1557,6 @@ self.onmessage = function(e) {
       for (const p of S.pages) {
         if (!cats[p.category]) { cats[p.category] = []; catOrder.push(p.category); }
         cats[p.category].push({ p, idx: S.pages.indexOf(p) });
-      }
-
-      // Auto-expand only the category containing current artist
-      const currentCat = S.pages[S.currentPage]?.category;
-
-      // First time rendering (collapsedCats is empty): collapse all except current
-      const isFirstRender = S.collapsedCats.size === 0 && catOrder.length > 1;
-      if (isFirstRender) {
-        catOrder.forEach(cat => {
-          if (cat !== currentCat) S.collapsedCats.add(cat);
-        });
-      } else if (currentCat) {
-        // Ensure current cat is always expanded on subsequent renders
-        S.collapsedCats.delete(currentCat);
       }
 
       const frag = document.createDocumentFragment();
@@ -1558,11 +1605,6 @@ self.onmessage = function(e) {
         }
       }
       sb.appendChild(frag);
-
-      // 4. Auto-scroll sidebar to active artist
-      if (activeRow) {
-        requestAnimationFrame(() => activeRow.scrollIntoView({ block: 'center', behavior: 'smooth' }));
-      }
     }
 
     function renderArtistPage(idx) {
@@ -1779,6 +1821,21 @@ self.onmessage = function(e) {
       document.getElementById('gallery-main').classList.toggle('sb-open', open);
       document.getElementById('sidebar-fab').classList.toggle('shifted', open);
       document.getElementById('sidebar-fab').textContent = open ? '✕' : '☰';
+      
+      if (open) {
+        const activeRow = document.querySelector('#sidebar .sidebar-artist.active');
+        if (activeRow) activeRow.scrollIntoView({ block: 'center', behavior: 'instant' });
+      }
+    }
+
+    function toggleHomeSidebar(forceState) {
+      const open = forceState !== undefined ? forceState : !S.homeSidebarOpen;
+      S.homeSidebarOpen = open;
+      document.getElementById('home-sidebar').classList.toggle('open', open);
+      document.getElementById('home-main').classList.toggle('sb-open', open);
+      document.getElementById('home-sidebar-fab').classList.toggle('shifted', open);
+      document.getElementById('home-sidebar-fab').textContent = open ? '✕' : '☰';
+      document.getElementById('char-fab').classList.toggle('shifted', open);
     }
 
     // ══════════════════════════════════════════════
@@ -1788,6 +1845,8 @@ self.onmessage = function(e) {
       items: [], idx: 0,
       startX: 0, startY: 0,
       scale: 1, pinchStart: 0,
+      translateX: 0, translateY: 0,
+      tempScale: 1
     };
 
     function openModal(items, idx) {
@@ -1795,15 +1854,30 @@ self.onmessage = function(e) {
       showModalAt(idx);
       document.getElementById('img-modal').classList.add('show');
       document.body.style.overflow = 'hidden';
+      
+      const doc = document.documentElement;
+      if (doc.requestFullscreen) doc.requestFullscreen().catch(e => console.log(e));
+      else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
     }
 
     function closeModal() {
-      document.getElementById('img-modal').classList.remove('show');
+      const modal = document.getElementById('img-modal');
+      if (!modal.classList.contains('show')) return;
+      
+      modal.classList.remove('show');
       document.body.style.overflow = '';
       // Reset zoom
       const wrap = document.getElementById('modal-media-wrap');
       const el = wrap.querySelector('img, video');
-      if (el) { el.style.transform = ''; M.scale = 1; }
+      if (el) { 
+        el.style.transform = ''; 
+        M.scale = 1; M.tempScale = 1; M.translateX = 0; M.translateY = 0; 
+      }
+      
+      if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) document.exitFullscreen().catch(e => console.log(e));
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+      }
     }
 
     function showModalAt(idx) {
@@ -1834,6 +1908,9 @@ self.onmessage = function(e) {
       }
       el.style.transform = '';
       M.scale = 1;
+      M.tempScale = 1;
+      M.translateX = 0;
+      M.translateY = 0;
       wrap.insertBefore(el, wrap.querySelector('.modal-info'));
 
       document.getElementById('modal-counter').textContent = `${idx + 1} / ${M.items.length}`;
@@ -1864,6 +1941,8 @@ self.onmessage = function(e) {
         if (e.touches.length === 1) {
           t0 = { x: e.touches[0].clientX, y: e.touches[0].clientY, time: Date.now() };
           M.pinchStart = 0;
+          M.startX = M.translateX;
+          M.startY = M.translateY;
         } else if (e.touches.length === 2) {
           const dx = e.touches[0].clientX - e.touches[1].clientX;
           const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -1878,19 +1957,33 @@ self.onmessage = function(e) {
           const dx = e.touches[0].clientX - e.touches[1].clientX;
           const dy = e.touches[0].clientY - e.touches[1].clientY;
           const dist = Math.hypot(dx, dy);
-          const newScale = Math.max(1, Math.min(5, M.scale * (dist / M.pinchStart)));
+          M.tempScale = Math.max(1, Math.min(5, M.scale * (dist / M.pinchStart)));
           const el = document.getElementById('modal-media-wrap').querySelector('img, video');
-          if (el) el.style.transform = `scale(${newScale})`;
+          if (el) el.style.transform = `translate(${M.translateX}px, ${M.translateY}px) scale(${M.tempScale})`;
+        } else if (e.touches.length === 1 && M.scale > 1.1 && t0) {
+          e.preventDefault();
+          const dx = e.touches[0].clientX - t0.x;
+          const dy = e.touches[0].clientY - t0.y;
+          M.translateX = M.startX + dx;
+          M.translateY = M.startY + dy;
+          const el = document.getElementById('modal-media-wrap').querySelector('img, video');
+          if (el) el.style.transform = `translate(${M.translateX}px, ${M.translateY}px) scale(${M.scale})`;
         }
       }, { passive: false });
 
       modal.addEventListener('touchend', e => {
         // Save scale if pinch just ended
         if (M.pinchStart) {
-          const el = document.getElementById('modal-media-wrap').querySelector('img, video');
-          if (el) {
-            const mat = new DOMMatrix(getComputedStyle(el).transform);
-            M.scale = isNaN(mat.a) ? 1 : mat.a;
+          M.scale = M.tempScale;
+          if (M.scale <= 1.1) {
+             M.translateX = 0;
+             M.translateY = 0;
+             const el = document.getElementById('modal-media-wrap').querySelector('img, video');
+             if (el) {
+               el.style.transition = 'transform 0.2s';
+               el.style.transform = `translate(0px, 0px) scale(${M.scale})`;
+               setTimeout(() => el.style.transition = '', 200);
+             }
           }
           M.pinchStart = 0;
           t0 = null;
@@ -1904,25 +1997,114 @@ self.onmessage = function(e) {
         const dt = Date.now() - t0.time;
         t0 = null;
 
+        if (M.scale > 1.1) {
+            // Already handled via touchmove drag, do not trigger swipe navigations
+            return;
+        }
+
         if (dt > 500) return;
 
-        // Swipe up/down to close (only if not zoomed in)
-        if (M.scale <= 1.1 && Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) {
+        // Swipe up/down to close
+        if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) {
           closeModal(); return;
         }
-        // Horizontal swipe for navigation (only if not zoomed)
-        if (M.scale <= 1.1 && Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal swipe for navigation
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
           if (dx < 0) modalNext(); else modalPrev();
           return;
         }
-        // Tap to navigate (left/right half) only if not zoomed
-        if (M.scale <= 1.1 && Math.abs(dx) < 20 && Math.abs(dy) < 20) {
-          // 避免点击导航按钮、关闭按钮或视频时触发 tap 导航（防止移动端双次触发）
+        // Tap to navigate
+        if (Math.abs(dx) < 20 && Math.abs(dy) < 20) {
+          // 避免点击导航按钮、关闭按钮或视频时触发 tap 导航
           if (e.target.closest('.modal-nav') || e.target.closest('.modal-close') || e.target.tagName === 'VIDEO') return;
           const rect = modal.getBoundingClientRect();
           if (t1.clientX < rect.width / 2) modalPrev(); else modalNext();
         }
       }, { passive: true });
+
+      // Mouse Events for PC Drag and Click Navigation
+      let isMouseDown = false;
+      let mouseMoved = false;
+
+      modal.addEventListener('pointerdown', e => {
+        if (e.pointerType !== 'mouse') return;
+        if (e.target.closest('.modal-close') || e.target.tagName === 'VIDEO') return;
+        isMouseDown = true;
+        mouseMoved = false;
+        t0 = { x: e.clientX, y: e.clientY, time: Date.now() };
+        M.startX = M.translateX;
+        M.startY = M.translateY;
+        e.preventDefault(); // Prevent image ghost dragging
+      });
+
+      window.addEventListener('pointermove', e => {
+        if (e.pointerType !== 'mouse') return;
+        if (!isMouseDown) return;
+        mouseMoved = true;
+        if (M.scale > 1.1) {
+          e.preventDefault();
+          const dx = e.clientX - t0.x;
+          const dy = e.clientY - t0.y;
+          M.translateX = M.startX + dx;
+          M.translateY = M.startY + dy;
+          const el = document.getElementById('modal-media-wrap').querySelector('img, video');
+          if (el) el.style.transform = `translate(${M.translateX}px, ${M.translateY}px) scale(${M.scale})`;
+        }
+      }, { passive: false });
+
+      window.addEventListener('pointerup', e => {
+        if (e.pointerType !== 'mouse') return;
+        if (!isMouseDown) return;
+        isMouseDown = false;
+        if (!t0) return;
+        
+        const dx = e.clientX - t0.x;
+        const dy = e.clientY - t0.y;
+        const dt = Date.now() - t0.time;
+        t0 = null;
+
+        if (M.scale > 1.1) return; // Ignore navigations if zoomed
+
+        if (!mouseMoved || (Math.abs(dx) < 10 && Math.abs(dy) < 10)) {
+          // Tap to navigate
+          if (e.target.closest('.modal-close') || e.target.tagName === 'VIDEO') return;
+          const rect = modal.getBoundingClientRect();
+          if (e.clientX < rect.width / 2) modalPrev(); else modalNext();
+        } else if (dt < 500) {
+          // Mouse swipe
+          if (Math.abs(dy) > 80 && Math.abs(dy) > Math.abs(dx)) {
+            closeModal();
+          } else if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) {
+            if (dx < 0) modalNext(); else modalPrev();
+          }
+        }
+      });
+
+      // Wheel Events for PC Zoom (Ctrl+Wheel or Trackpad Pinch)
+      modal.addEventListener('wheel', e => {
+        e.preventDefault(); // Prevent page scroll
+        let delta = e.deltaY;
+        if (!e.ctrlKey) {
+           delta = e.deltaY > 0 ? 50 : -50;
+        }
+        
+        const zoomSpeed = 0.01;
+        let newScale = M.scale - delta * zoomSpeed;
+        newScale = Math.max(1, Math.min(5, newScale));
+        
+        // Reset translation when zoomed out
+        if (newScale <= 1.1 && M.scale > 1.1) {
+          M.translateX = 0; M.translateY = 0;
+        }
+        M.scale = newScale;
+        
+        const el = document.getElementById('modal-media-wrap').querySelector('img, video');
+        if (el) {
+          // Ensure instant follow for wheel
+          el.style.transition = 'none';
+          el.style.transform = `translate(${M.translateX}px, ${M.translateY}px) scale(${M.scale})`;
+        }
+      }, { passive: false });
     }
 
     // ══════════════════════════════════════════════
@@ -1982,18 +2164,42 @@ self.onmessage = function(e) {
       }
     }
 
-    async function goHome(chars) {
-      if (chars) await activateChars(chars);
+    function _showGallery(pageIdx) {
+      switchView('gallery');
+      S.sidebarOpen = false;
+      toggleSidebar(false);
+      
+      const currentCat = S.pages[pageIdx].category;
+      S.collapsedCats.clear();
+      const allCats = new Set(S.pages.map(p => p.category));
+      allCats.forEach(c => {
+        if (c !== currentCat) S.collapsedCats.add(c);
+      });
+      
+      renderSidebar();
+      renderArtistPage(pageIdx);
+    }
+
+    function _showHome() {
       switchView('home');
       renderHome();
     }
 
+    async function goHome(chars) {
+      if (chars) await activateChars(chars);
+      if (S.view === 'gallery') {
+        history.pushState({ view: 'home' }, '');
+      }
+      _showHome();
+    }
+
     async function goToGallery(pageIdx) {
-      switchView('gallery');
-      S.sidebarOpen = false;
-      toggleSidebar(false);
-      renderSidebar();
-      renderArtistPage(pageIdx);
+      if (S.view === 'home') {
+        history.pushState({ view: 'gallery', idx: pageIdx }, '');
+      } else {
+        history.replaceState({ view: 'gallery', idx: pageIdx }, '');
+      }
+      _showGallery(pageIdx);
     }
 
     // ══════════════════════════════════════════════
@@ -2020,8 +2226,8 @@ self.onmessage = function(e) {
       if (chars.length > 0) {
         await goHome([chars[0]]);
       } else {
-        switchView('home');
-        renderHome();
+        if (S.view === 'gallery') history.pushState({ view: 'home' }, '');
+        _showHome();
       }
     }
 
@@ -2043,8 +2249,8 @@ self.onmessage = function(e) {
         }
 
         setLoader(false);
-        switchView('home');
-        renderHome();
+        history.replaceState({ view: 'home' }, '');
+        _showHome();
       } catch (err) {
         console.error(err);
         document.getElementById('loader-text').textContent = '加载失败: ' + err.message;
@@ -2081,25 +2287,52 @@ self.onmessage = function(e) {
       if (e.target === document.getElementById('char-overlay')) closeCharSheet();
     });
 
-    // Sidebar FAB
+    // Sidebar FABs
     document.getElementById('sidebar-fab').addEventListener('click', () => toggleSidebar());
+    document.getElementById('home-sidebar-fab').addEventListener('click', () => toggleHomeSidebar());
 
     // Modal controls
     document.getElementById('modal-close').addEventListener('click', closeModal);
-    document.getElementById('modal-prev').addEventListener('click', modalPrev);
-    document.getElementById('modal-next').addEventListener('click', modalNext);
+    // document.getElementById('modal-prev').addEventListener('click', modalPrev);
+    // document.getElementById('modal-next').addEventListener('click', modalNext);
 
     // Modal keyboard
     document.addEventListener('keydown', e => {
       const modal = document.getElementById('img-modal');
       if (!modal.classList.contains('show')) return;
-      if (e.key === 'Escape' || e.key === ' ') { e.preventDefault(); closeModal(); }
+      // Esc handle is primarily done by fullscreenchange below now, but keep fallback
+      if (e.key === 'Escape' && !document.fullscreenElement) { e.preventDefault(); closeModal(); }
+      if (e.key === ' ') { e.preventDefault(); closeModal(); }
       if (e.key === 'ArrowLeft') modalPrev();
       if (e.key === 'ArrowRight') modalNext();
     });
 
+    // Handle ESC exiting fullscreen to close modal
+    document.addEventListener('fullscreenchange', () => {
+      const modal = document.getElementById('img-modal');
+      if (!document.fullscreenElement && modal.classList.contains('show')) {
+        closeModal();
+      }
+    });
+    document.addEventListener('webkitfullscreenchange', () => {
+      const modal = document.getElementById('img-modal');
+      if (!document.webkitFullscreenElement && modal.classList.contains('show')) {
+        closeModal();
+      }
+    });
+
     // Setup touch for modal
     setupModalTouch();
+
+    // History popstate
+    window.addEventListener('popstate', (e) => {
+      const state = e.state;
+      if (state && state.view === 'gallery') {
+        _showGallery(state.idx);
+      } else {
+        _showHome();
+      }
+    });
 
     // Start
     init();
