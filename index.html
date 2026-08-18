@@ -1112,7 +1112,10 @@
 
   <!-- HEADER -->
   <header>
-    <div class="logo" id="logo-btn">ARCHIVE</div>
+    <div style="display:flex; align-items:center; gap: 12px;">
+      <div class="logo" id="logo-btn">ARCHIVE</div>
+      <input type="checkbox" id="fs-toggle" title="全屏开关" style="cursor:pointer; width: 16px; height: 16px; accent-color: var(--teal);">
+    </div>
     <div class="mode-toggle">
       <button class="mode-btn active" id="btn-sfw" data-mode="sfw">SFW</button>
       <button class="mode-btn" id="btn-nsfw" data-mode="nsfw">NSFW</button>
@@ -1530,12 +1533,20 @@ self.onmessage = function(e) {
           nameEl.className = 'artist-name';
           nameEl.textContent = p.artistName;
 
+          const idEl = document.createElement('div');
+          idEl.className = 'artist-id';
+          idEl.style.fontSize = '10px';
+          idEl.style.color = 'var(--text3)';
+          idEl.style.lineHeight = '1';
+          idEl.textContent = `ID: ${p.artistId}`;
+
           const cntEl = document.createElement('div');
           cntEl.className = 'artist-count';
           cntEl.textContent = `${p.items.length} 张`;
 
           card.appendChild(ring);
           card.appendChild(nameEl);
+          card.appendChild(idEl);
           card.appendChild(cntEl);
           card.addEventListener('click', () => goToGallery(parseInt(card.dataset.pageIdx)));
           grid.appendChild(card);
@@ -1863,9 +1874,11 @@ self.onmessage = function(e) {
       document.getElementById('img-modal').classList.add('show');
       document.body.style.overflow = 'hidden';
       
-      const doc = document.documentElement;
-      if (doc.requestFullscreen) doc.requestFullscreen().catch(e => console.log(e));
-      else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+      if (document.getElementById('fs-toggle').checked) {
+        const doc = document.documentElement;
+        if (doc.requestFullscreen) doc.requestFullscreen().catch(e => console.log(e));
+        else if (doc.webkitRequestFullscreen) doc.webkitRequestFullscreen();
+      }
     }
 
     function closeModal() {
